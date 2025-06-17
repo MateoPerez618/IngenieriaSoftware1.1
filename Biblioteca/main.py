@@ -1,46 +1,32 @@
 # main.py
-from autenticacion import UsuarioDB
+from autenticacion import mostrar_menu_autenticacion
 
-def menu_principal():
-    db = UsuarioDB()
-
-    while True:
-        print("\n=== MENÚ DE INICIO ===")
-        print("1. Registrarse")
-        print("2. Iniciar sesión")
-        print("3. Salir")
-        opcion = input("Seleccione una opción: ").strip()
-
-        if opcion == "1":
-            username = input("Nuevo usuario: ").strip()
-            password = input("Contraseña: ").strip()
-            db.registrar(username, password)
-
-        elif opcion == "2":
-            username = input("Usuario: ").strip()
-            password = input("Contraseña: ").strip()
-            if db.login(username, password):
-                menu_funcionalidades()
-                break
-
-        elif opcion == "3":
-            print("👋 Hasta luego.")
-            db.cerrar()
-            break
-        else:
-            print("⚠️ Opción no válida.")
-
+# Función de ejemplo que representa el resto del sistema después del login
 def menu_funcionalidades():
     while True:
         print("\n=== FUNCIONALIDADES ===")
-        print("1. Cerrar sesión")
+        print("1. Funcionalidad 1")
+        print("2. Funcionalidad 2")
+        print("3. Cerrar sesión")
 
         opcion = input("Seleccione una opción: ").strip()
+
         if opcion == "1":
+            #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
+            print("🔧 Ejecutando funcionalidad 1...")
+        elif opcion == "2":
+            #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
+            print("🔧 Ejecutando funcionalidad 2...")
+        elif opcion == "3":
+            #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
             print("🔒 Sesión cerrada.")
             break
+        # AÑADIR MAS IF SI SE AÑADEN MAS FUNCIONALIDADES
         else:
             print("⚠️ Opción no válida.")
 
+# Punto de entrada del programa
 if __name__ == "__main__":
-    menu_principal()
+    # Llamamos al menú de autenticación. Si retorna True, iniciamos funcionalidades.
+    if mostrar_menu_autenticacion():
+        menu_funcionalidades()
