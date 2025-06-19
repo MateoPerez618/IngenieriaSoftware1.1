@@ -1,5 +1,10 @@
 # main.py
-from autenticacion import mostrar_menu_autenticacion
+from autenticacion import mostrar_menu_autenticacion    
+
+
+
+#Crear instancias para libros
+
 
 # Función de ejemplo que representa el resto del sistema después del login
 def menu_funcionalidades():
@@ -14,6 +19,26 @@ def menu_funcionalidades():
         if opcion == "1":
             #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
             print("🔧 Ejecutando funcionalidad 1...")
+            print("¿Que deseas hacer?")
+            print("1. Ver Catalogo")
+            print("2. Filtrar Categoria")
+            print("3. Busqueda Personalizada")
+
+            opcion1 = input("Selecciona una opcion: ").strip()
+
+            if opcion1=="1":
+                print("Mostrando Catalogo...")
+                #Catalogo.verCatalogo()
+            elif opcion1=="2":
+                print("Filtrando Categoria...")
+                #Catalogo.verCatalogo()
+            elif opcion1=="3":
+                print("Mostrando Busqueda Personalizada...")
+                #Catalogo.verCatalogo()
+    
+    
+
+
         elif opcion == "2":
             #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
             print("🔧 Ejecutando funcionalidad 2...")
