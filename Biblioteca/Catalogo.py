@@ -1,8 +1,9 @@
+from Libro import Libro
 class Catalogo:
     def __init__(self):
         self.libros = []
 
-    def agregar_libro(self, libro):
+    def agregarLibro(self, libro):
         self.libros.append(libro)
 
     def mostrarCatalogo(self):
@@ -10,5 +11,21 @@ class Catalogo:
         if not self.libros:
             print("⚠️ No hay libros en el catálogo.")
         for libro in self.libros:
-            libro.mostrar_info()
+            libro.infoLibro()
             print("-" * 30)
+    
+    def filtrarCategoria(self, categoria):
+        print("Libros de: " +categoria)
+        if not self.libros:
+            print("⚠️ No hay libros en el catálogo.")
+
+        encontrados= False    
+        for libro in self.libros:
+            if libro.categoria.lower()==categoria.lower():
+                libro.infoLibro()
+                print("-" * 30)
+                encontrados= True
+
+        if not encontrados:
+            print("⚠️ No hay libros en esa categoría.")        
+

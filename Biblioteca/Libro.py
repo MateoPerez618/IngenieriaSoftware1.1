@@ -1,13 +1,15 @@
 class Libro:
     
-    def __init__(self, nombre, categoria, existencias):
+    def __init__(self, nombre, categoria, autor,  existencias):
         self.nombre = nombre
         self.categoria = categoria
+        self.autor = autor
         self.existencias = existencias
 
-    def mostrarCatalogo(self):
+    def infoLibro(self):
         print(f"Nombre del libro: {self.nombre}")
         print(f"Categoría: {self.categoria}")
+        print(f"Autor: {self.autor}")
         print(f"Existencias: {self.existencias}")
 
     def disponible(self):

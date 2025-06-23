@@ -8,15 +8,15 @@ from Prestamo import PrestamoDB
 #Crear instancias para libros
 catalogo = Catalogo()
 # Cargar libros de ejemplo los cambiamos luego
-catalogo.agregar_libro(Libro("Cien años de soledad", "Novela", 3))
-catalogo.agregar_libro(Libro("El Principito", "Fantasía", 2))
-catalogo.agregar_libro(Libro("Álgebra de Baldor", "Matemáticas", 1))
+catalogo.agregarLibro(Libro("Cien años de soledad", "Novela","Gabriel Garcia Marquez" ,3))
+catalogo.agregarLibro(Libro("El Principito","Fantasia","Antoine de Saint-Exupéry" ,2))
+catalogo.agregarLibro(Libro("Álgebra de Baldor", "Matematicas","Aurelio Baldor" ,1))
 
 # Función de ejemplo que representa el resto del sistema después del login
 def menu_funcionalidades(usuario):
     while True:
         print("\n=== FUNCIONALIDADES ===")
-        print("1. Funcionalidad 1")
+        print("1. Visualizar Catalogo")
         print("2. Prestar libro")
         print("3. Cerrar sesión")
 
@@ -31,13 +31,18 @@ def menu_funcionalidades(usuario):
             print("3. Busqueda Personalizada")
 
             opcion1 = input("Selecciona una opcion: ").strip()
-
             if opcion1=="1":
                 print("Mostrando Catalogo...")
-                #Catalogo.verCatalogo()
+                catalogo.mostrarCatalogo()
             elif opcion1=="2":
                 print("Filtrando Categoria...")
-                #Catalogo.verCatalogo()
+                print("¿Cuales son tus gustos?:")
+                print("1.Novela")
+                print("2.Fantasia")
+                print("3.Matematicas")
+                opcion3= input("Ingresa el nombre la categoria que deseas: ").strip()
+                catalogo.filtrarCategoria(opcion3)
+        
             elif opcion1=="3":
                 print("Mostrando Busqueda Personalizada...")
                 #Catalogo.verCatalogo()
