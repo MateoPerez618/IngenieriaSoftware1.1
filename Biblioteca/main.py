@@ -101,7 +101,8 @@ def menu_funcionalidades(usuario):
                 print("\n--- CONSULTAR DISPONIBILIDAD ---")
                 print("1. Buscar por hora")
                 print("2. Buscar por fecha")
-                print("3. Volver al menú anterior")
+                print("3. Mostrar horarios disponibles y reservar")
+                print("4. Volver al menú anterior")
                 opcion = input("Seleccione una opción: ").strip()
         
                 if opcion == "1":
@@ -114,6 +115,8 @@ def menu_funcionalidades(usuario):
                     fecha = input("📅 Ingrese la fecha (YYYY-MM-DD): ").strip()
                     gestor.buscar_por_fecha(fecha)
                 elif opcion == "3":
+                    gestor.mostrar_disponibles_y_reservar(usuario.nombre_completo)
+                elif opcion == "4":
                     break
                 else:
                     print("⚠️ Opción no válida.")
