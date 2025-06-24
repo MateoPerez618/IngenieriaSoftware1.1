@@ -3,6 +3,7 @@ from autenticacion import mostrar_menu_autenticacion
 from Catalogo import Catalogo
 from Libro import Libro
 from Prestamo import PrestamoDB 
+from disponibilidad import GestorDisponibilidad
 
 
 #Crear instancias para libros
@@ -18,7 +19,8 @@ def menu_funcionalidades(usuario):
         print("\n=== FUNCIONALIDADES ===")
         print("1. Visualizar Catalogo")
         print("2. Prestar libro")
-        print("3. Cerrar sesión")
+        print("3. Consultar disponibilidad")
+        print("4. Cerrar sesión")
 
         opcion = input("Seleccione una opción: ").strip()
 
@@ -90,6 +92,34 @@ def menu_funcionalidades(usuario):
                     print(f"📅 Puede recoger el libro en la biblioteca.")
                     print(f"🔁 Fecha de devolución: {fecha_devolucion}")
         elif opcion == "3":
+            if usuario.rol not in ["Docente", "Administrativo"]:
+                print("⛔ Acceso denegado: Esta funcionalidad es solo para docentes o administrativos.")
+                continue
+            gestor = GestorDisponibilidad()
+
+            while True:
+                print("\n--- CONSULTAR DISPONIBILIDAD ---")
+                print("1. Buscar por hora")
+                print("2. Buscar por fecha")
+                print("3. Volver al menú anterior")
+                opcion = input("Seleccione una opción: ").strip()
+        
+                if opcion == "1":
+                    try:
+                        hora = int(input("⏰ Ingrese la hora (7 a 14): "))
+                        gestor.buscar_por_hora(hora)
+                    except ValueError:
+                        print("⚠️ Debes ingresar un número entero.")
+                elif opcion == "2":
+                    fecha = input("📅 Ingrese la fecha (YYYY-MM-DD): ").strip()
+                    gestor.buscar_por_fecha(fecha)
+                elif opcion == "3":
+                    break
+                else:
+                    print("⚠️ Opción no válida.")
+
+
+        elif opcion == "4":
             #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
             print("🔒 Sesión cerrada.")
             break
