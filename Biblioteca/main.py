@@ -10,31 +10,31 @@ from disponibilidad import GestorDisponibilidad
 catalogo = Catalogo()
 # Cargar libros de ejemplo los cambiamos luego
 catalogo.agregarLibro(Libro("Cien años de soledad", "Novela","Gabriel Garcia Marquez" ,3))
-catalogo.agregarLibro(Libro("El Principito","Fantasia","Antoine de Saint-Exupéry" ,2))
-catalogo.agregarLibro(Libro("Álgebra de Baldor", "Matematicas","Aurelio Baldor" ,1))
+catalogo.agregarLibro(Libro("El Principito","Fantasia","Antoine de Saint-Exupery" ,2))
+catalogo.agregarLibro(Libro("Algebra de Baldor", "Matematicas","Aurelio Baldor" ,1))
 catalogo.agregarLibro(Libro("1984", "Novela", "George Orwell", 4))
 catalogo.agregarLibro(Libro("El Hobbit", "Fantasia", "J.R.R. Tolkien", 5))
 catalogo.agregarLibro(Libro("Breve historia del tiempo", "Ciencia", "Stephen Hawking", 2))
 catalogo.agregarLibro(Libro("La Odisea", "Clasico", "Homero", 3))
 catalogo.agregarLibro(Libro("Orgullo y prejuicio", "Romance", "Jane Austen", 4))
-catalogo.agregarLibro(Libro("Crónica de una muerte anunciada", "Novela", "Gabriel Garcia Marquez", 3))
+catalogo.agregarLibro(Libro("Cronica de una muerte anunciada", "Novela", "Gabriel Garcia Marquez", 3))
 catalogo.agregarLibro(Libro("Harry Potter y la piedra filosofal", "Fantasia", "J.K. Rowling", 6))
 catalogo.agregarLibro(Libro("Los juegos del hambre", "Fantasia", "Suzanne Collins", 4))
-catalogo.agregarLibro(Libro("El código Da Vinci", "Suspenso", "Dan Brown", 5))
+catalogo.agregarLibro(Libro("El codigo Da Vinci", "Suspenso", "Dan Brown", 5))
 catalogo.agregarLibro(Libro("El alquimista", "Autoayuda", "Paulo Coelho", 7))
 catalogo.agregarLibro(Libro("Padre rico, padre pobre", "Finanzas", "Robert Kiyosaki", 6))
 catalogo.agregarLibro(Libro("Sapiens", "Historia", "Yuval Noah Harari", 3))
 catalogo.agregarLibro(Libro("El nombre del viento", "Fantasia", "Patrick Rothfuss", 4))
-catalogo.agregarLibro(Libro("Cumbres borrascosas", "Romance", "Emily Brontë", 2))
+catalogo.agregarLibro(Libro("Cumbres borrascosas", "Romance", "Emily Bronte", 2))
 catalogo.agregarLibro(Libro("La divina comedia", "Poesia", "Dante Alighieri", 2))
-catalogo.agregarLibro(Libro("Rayuela", "Novela", "Julio Cortázar", 3))
+catalogo.agregarLibro(Libro("Rayuela", "Novela", "Julio Cortazar", 3))
 catalogo.agregarLibro(Libro("Fahrenheit 451", "Ciencia ficcion", "Ray Bradbury", 3))
-catalogo.agregarLibro(Libro("Ensayo sobre la ceguera", "Novela", "José Saramago", 2))
+catalogo.agregarLibro(Libro("Ensayo sobre la ceguera", "Novela", "Jose Saramago", 2))
 catalogo.agregarLibro(Libro("El arte de la guerra", "Filosofia", "Sun Tzu", 4))
 catalogo.agregarLibro(Libro("Meditaciones", "Filosofia", "Marco Aurelio", 2))
 catalogo.agregarLibro(Libro("Don Quijote de la Mancha", "Clasico", "Miguel de Cervantes", 4))
 catalogo.agregarLibro(Libro("El señor de los anillos", "Fantasia", "J.R.R. Tolkien", 5))
-catalogo.agregarLibro(Libro("Drácula", "Terror", "Bram Stoker", 3))
+catalogo.agregarLibro(Libro("Dracula", "Terror", "Bram Stoker", 3))
 catalogo.agregarLibro(Libro("Frankenstein", "Terror", "Mary Shelley", 3))
 catalogo.agregarLibro(Libro("Los miserables", "Clasico", "Victor Hugo", 3))
 catalogo.agregarLibro(Libro("Matar a un ruiseñor", "Novela", "Harper Lee", 4))
@@ -44,11 +44,11 @@ catalogo.agregarLibro(Libro("El retrato de Dorian Gray", "Novela", "Oscar Wilde"
 catalogo.agregarLibro(Libro("La insoportable levedad del ser", "Novela", "Milan Kundera", 2))
 catalogo.agregarLibro(Libro("El psicoanalista", "Thriller", "John Katzenbach", 4))
 catalogo.agregarLibro(Libro("Cien años de soledad", "Novela", "Gabriel Garcia Marquez", 3))  # Ya lo tenías
-catalogo.agregarLibro(Libro("El túnel", "Novela", "Ernesto Sabato", 2))
+catalogo.agregarLibro(Libro("El tunel", "Novela", "Ernesto Sabato", 2))
 catalogo.agregarLibro(Libro("La tregua", "Novela", "Mario Benedetti", 3))
 catalogo.agregarLibro(Libro("La metamorfosis", "Ficcion", "Franz Kafka", 4))
-catalogo.agregarLibro(Libro("La rebelión de la granja", "Fabula politica", "George Orwell", 3))
-catalogo.agregarLibro(Libro("Cómo ganar amigos e influir sobre las personas", "Autoayuda", "Dale Carnegie", 5))
+catalogo.agregarLibro(Libro("La rebelion de la granja", "Fabula politica", "George Orwell", 3))
+catalogo.agregarLibro(Libro("Como ganar amigos e influir sobre las personas", "Autoayuda", "Dale Carnegie", 5))
 
 # Función de ejemplo que representa el resto del sistema después del login
 def menu_funcionalidades(usuario):
@@ -99,8 +99,9 @@ def menu_funcionalidades(usuario):
         
             elif opcion1=="3":
                 print("Mostrando Busqueda Personalizada...")
-                #Catalogo.verCatalogo()
-    
+                print("¿Que te apetece leer hoy?:")
+                opcion4= input("Escribe el libro que quieras por titulo o autor:").strip()
+                catalogo.filtrarBusquedaPersonalizada(opcion4)
     
 
 

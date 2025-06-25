@@ -27,5 +27,18 @@ class Catalogo:
                 encontrados= True
 
         if not encontrados:
-            print("⚠️ No hay libros en esa categoría.")        
+            print("⚠️ No hay libros en esa categoría.")  
+
+
+    def filtrarBusquedaPersonalizada(self, busqueda):
+        
+        encontrados= False    
+        for libro in self.libros:
+            if busqueda == libro.nombre.lower() or busqueda == libro.autor.lower():
+                libro.infoLibro()
+                print("-" * 30)
+                encontrados= True
+
+        if not encontrados:
+            print("⚠️ No hay libros con ese autor o nombre")                
 
