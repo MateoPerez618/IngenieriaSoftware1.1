@@ -5,7 +5,7 @@ class Libro:
         self.categoria = categoria
         self.autor = autor
         self.existencias = existencias
-
+    #Este metodo muestra toda la informacion del libro
     def infoLibro(self):
         print(f"Nombre del libro: {self.nombre}")
         print(f"Categoría: {self.categoria}")
