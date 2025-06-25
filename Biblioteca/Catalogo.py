@@ -2,10 +2,10 @@ from Libro import Libro
 class Catalogo:
     def __init__(self):
         self.libros = []
-
+    #Este metodo sirve para agregar los libros al catalogo
     def agregarLibro(self, libro):
         self.libros.append(libro)
-
+    
     def mostrarCatalogo(self):
         print("📘 === CATÁLOGO DE LIBROS ===")
         if not self.libros:

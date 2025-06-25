@@ -8,7 +8,7 @@ from disponibilidad import GestorDisponibilidad
 
 #Crear instancias para libros
 catalogo = Catalogo()
-# Cargar libros de ejemplo los cambiamos luego
+# Catalogo de libros
 catalogo.agregarLibro(Libro("Cien años de soledad", "Novela","Gabriel Garcia Marquez" ,3))
 catalogo.agregarLibro(Libro("El Principito","Fantasia","Antoine de Saint-Exupery" ,2))
 catalogo.agregarLibro(Libro("Algebra de Baldor", "Matematicas","Aurelio Baldor" ,1))
@@ -62,17 +62,21 @@ def menu_funcionalidades(usuario):
         opcion = input("Seleccione una opción: ").strip()
 
         if opcion == "1":
-            #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
+            #Funcionalidad 1
             print("🔧 Ejecutando funcionalidad 1...")
+            #Preguntamos al usuario que desea hacer dentro de la funcionalidad
             print("¿Que deseas hacer?")
             print("1. Ver Catalogo")
             print("2. Filtrar Categoria")
             print("3. Busqueda Personalizada")
 
+            #El usuario elige una opcion
             opcion1 = input("Selecciona una opcion: ").strip()
+            #Si el usuario elige la opcion 1, le mostramos el catalogo completo
             if opcion1=="1":
                 print("Mostrando Catalogo...")
                 catalogo.mostrarCatalogo()
+            #Si el usuario elige la opcion 2, le mostramos los libros dependiendo de la categoria que desee    
             elif opcion1=="2":
                 print("Filtrando Categoria...")
                 print("¿Cuales son tus gustos?:")
@@ -94,13 +98,15 @@ def menu_funcionalidades(usuario):
                 print("16.Autoayuda")
                 print("17.Suspenso")
                 print("18.Ciencia")
+                #EL usuario escoge la categoria y dependiendo le mostramos el catalogo
                 opcion3= input("Ingresa el nombre la categoria que deseas: ").strip()
                 catalogo.filtrarCategoria(opcion3)
-        
+
+            #Si el usuario escoge la opcion 3, le mostramos el catalogo dependiendo del autor o titulo que desee
             elif opcion1=="3":
                 print("Mostrando Busqueda Personalizada...")
                 print("¿Que te apetece leer hoy?:")
-                opcion4= input("Escribe el libro que quieras por titulo o autor:").strip()
+                opcion4= input("Escribe el libro que quieras leer por titulo o autor:").strip()
                 catalogo.filtrarBusquedaPersonalizada(opcion4)
     
 
