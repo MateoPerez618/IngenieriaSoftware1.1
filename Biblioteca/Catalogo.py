@@ -15,6 +15,17 @@ class Catalogo:
         for libro in self.libros:
             libro.infoLibro()
             print("-" * 30)
+
+    def mostrarLibrosCalificacion(self):
+        print("📘 === CATÁLOGO DE LIBROS ===")
+        #Verificamos que hayan libros en el catalogo
+        if not self.libros:
+            print("⚠️ No hay libros en el catálogo.")
+        #Mostramos libro por libro    
+        for libro in self.libros:
+            libro.nombreLibro()
+            print("-" * 30)
+
     #Este metodo sirve para filtrar el catalogo por categoria
     def filtrarCategoria(self, categoria):
         print("Libros de: " +categoria)
@@ -54,3 +65,30 @@ class Catalogo:
         if not encontrados:
             print("⚠️ No hay libros con ese autor o nombre")                
 
+# Método para calificar un libro por su nombre
+    def calificarLibro(self, nombreLibro, calificacion, reseña=None):
+        for libro in self.libros:
+            if libro.nombre.lower() == nombreLibro.lower():
+                libro.agregarCalificacion(calificacion, reseña)
+                print("✅ Calificación agregada con éxito.")
+                return
+        print("⚠️ No se encontró un libro con ese nombre.")
+
+    # Método para ver las reseñas de un libro específico
+    def verReseñasLibro(self, nombreLibro):
+        for libro in self.libros:
+            if libro.nombre.lower() == nombreLibro.lower():
+                libro.mostrarReseñas()
+                return
+        print("⚠️ No se encontró un libro con ese nombre.")
+
+    # Método para mostrar calificaciones promedio de todos los libros
+    def mostrarCalificacionesPromedio(self):
+        print("📊 Calificaciones promedio de los libros:")
+        for libro in self.libros:
+            print(f"📖 {libro.nombre}: ", end="")
+            if libro.calificaciones:
+                promedio = sum(libro.calificaciones) / len(libro.calificaciones)
+                print(f"{promedio:.2f} ⭐ ({len(libro.calificaciones)} opiniones)")
+            else:
+                print("Sin calificaciones")
