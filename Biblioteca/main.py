@@ -9,46 +9,45 @@ from disponibilidad import GestorDisponibilidad
 #Crear instancias para libros
 catalogo = Catalogo()
 # Catalogo de libros
-catalogo.agregarLibro(Libro("Cien años de soledad", "Novela","Gabriel Garcia Marquez" ,3))
-catalogo.agregarLibro(Libro("El Principito","Fantasia","Antoine de Saint-Exupery" ,2))
-catalogo.agregarLibro(Libro("Algebra de Baldor", "Matematicas","Aurelio Baldor" ,1))
-catalogo.agregarLibro(Libro("1984", "Novela", "George Orwell", 4))
-catalogo.agregarLibro(Libro("El Hobbit", "Fantasia", "J.R.R. Tolkien", 5))
-catalogo.agregarLibro(Libro("Breve historia del tiempo", "Ciencia", "Stephen Hawking", 2))
-catalogo.agregarLibro(Libro("La Odisea", "Clasico", "Homero", 3))
-catalogo.agregarLibro(Libro("Orgullo y prejuicio", "Romance", "Jane Austen", 4))
-catalogo.agregarLibro(Libro("Cronica de una muerte anunciada", "Novela", "Gabriel Garcia Marquez", 3))
-catalogo.agregarLibro(Libro("Harry Potter y la piedra filosofal", "Fantasia", "J.K. Rowling", 6))
-catalogo.agregarLibro(Libro("Los juegos del hambre", "Fantasia", "Suzanne Collins", 4))
-catalogo.agregarLibro(Libro("El codigo Da Vinci", "Suspenso", "Dan Brown", 5))
-catalogo.agregarLibro(Libro("El alquimista", "Autoayuda", "Paulo Coelho", 7))
-catalogo.agregarLibro(Libro("Padre rico, padre pobre", "Finanzas", "Robert Kiyosaki", 6))
-catalogo.agregarLibro(Libro("Sapiens", "Historia", "Yuval Noah Harari", 3))
-catalogo.agregarLibro(Libro("El nombre del viento", "Fantasia", "Patrick Rothfuss", 4))
-catalogo.agregarLibro(Libro("Cumbres borrascosas", "Romance", "Emily Bronte", 2))
-catalogo.agregarLibro(Libro("La divina comedia", "Poesia", "Dante Alighieri", 2))
-catalogo.agregarLibro(Libro("Rayuela", "Novela", "Julio Cortazar", 3))
-catalogo.agregarLibro(Libro("Fahrenheit 451", "Ciencia ficcion", "Ray Bradbury", 3))
-catalogo.agregarLibro(Libro("Ensayo sobre la ceguera", "Novela", "Jose Saramago", 2))
-catalogo.agregarLibro(Libro("El arte de la guerra", "Filosofia", "Sun Tzu", 4))
-catalogo.agregarLibro(Libro("Meditaciones", "Filosofia", "Marco Aurelio", 2))
-catalogo.agregarLibro(Libro("Don Quijote de la Mancha", "Clasico", "Miguel de Cervantes", 4))
-catalogo.agregarLibro(Libro("El señor de los anillos", "Fantasia", "J.R.R. Tolkien", 5))
-catalogo.agregarLibro(Libro("Dracula", "Terror", "Bram Stoker", 3))
-catalogo.agregarLibro(Libro("Frankenstein", "Terror", "Mary Shelley", 3))
-catalogo.agregarLibro(Libro("Los miserables", "Clasico", "Victor Hugo", 3))
-catalogo.agregarLibro(Libro("Matar a un ruiseñor", "Novela", "Harper Lee", 4))
-catalogo.agregarLibro(Libro("Las venas abiertas de América Latina", "Historia", "Eduardo Galeano", 3))
-catalogo.agregarLibro(Libro("Un mundo feliz", "Ciencia ficcion", "Aldous Huxley", 3))
-catalogo.agregarLibro(Libro("El retrato de Dorian Gray", "Novela", "Oscar Wilde", 3))
-catalogo.agregarLibro(Libro("La insoportable levedad del ser", "Novela", "Milan Kundera", 2))
-catalogo.agregarLibro(Libro("El psicoanalista", "Thriller", "John Katzenbach", 4))
-catalogo.agregarLibro(Libro("Cien años de soledad", "Novela", "Gabriel Garcia Marquez", 3))  # Ya lo tenías
-catalogo.agregarLibro(Libro("El tunel", "Novela", "Ernesto Sabato", 2))
-catalogo.agregarLibro(Libro("La tregua", "Novela", "Mario Benedetti", 3))
-catalogo.agregarLibro(Libro("La metamorfosis", "Ficcion", "Franz Kafka", 4))
-catalogo.agregarLibro(Libro("La rebelion de la granja", "Fabula politica", "George Orwell", 3))
-catalogo.agregarLibro(Libro("Como ganar amigos e influir sobre las personas", "Autoayuda", "Dale Carnegie", 5))
+catalogo.agregarLibro(Libro("Cien años de soledad", "Novela","Gabriel Garcia Marquez" , 3.0 , 3))
+catalogo.agregarLibro(Libro("El Principito","Fantasia","Antoine de Saint-Exupery" , 3.0 , 2))
+catalogo.agregarLibro(Libro("Algebra de Baldor", "Matematicas","Aurelio Baldor", 3.0 , 1))
+catalogo.agregarLibro(Libro("1984", "Novela", "George Orwell", 3.0 , 4))
+catalogo.agregarLibro(Libro("El Hobbit", "Fantasia", "J.R.R. Tolkien", 3.0 , 5))
+catalogo.agregarLibro(Libro("Breve historia del tiempo", "Ciencia", "Stephen Hawking", 3.0 , 2))
+catalogo.agregarLibro(Libro("La Odisea", "Clasico", "Homero", 3.0 , 3))
+catalogo.agregarLibro(Libro("Orgullo y prejuicio", "Romance", "Jane Austen", 3.0 , 4))
+catalogo.agregarLibro(Libro("Cronica de una muerte anunciada", "Novela", "Gabriel Garcia Marquez", 3.0 , 3))
+catalogo.agregarLibro(Libro("Harry Potter y la piedra filosofal", "Fantasia", "J.K. Rowling", 3.0 , 6))
+catalogo.agregarLibro(Libro("Los juegos del hambre", "Fantasia", "Suzanne Collins", 3.0 , 4))
+catalogo.agregarLibro(Libro("El codigo Da Vinci", "Suspenso", "Dan Brown", 3.0 , 5))
+catalogo.agregarLibro(Libro("El alquimista", "Autoayuda", "Paulo Coelho", 3.0 , 7))
+catalogo.agregarLibro(Libro("Padre rico, padre pobre", "Finanzas", "Robert Kiyosaki", 3.0 , 6))
+catalogo.agregarLibro(Libro("Sapiens", "Historia", "Yuval Noah Harari", 3.0 , 3))
+catalogo.agregarLibro(Libro("El nombre del viento", "Fantasia", "Patrick Rothfuss", 3.0 , 4))
+catalogo.agregarLibro(Libro("Cumbres borrascosas", "Romance", "Emily Bronte", 3.0 , 2))
+catalogo.agregarLibro(Libro("La divina comedia", "Poesia", "Dante Alighieri", 3.0 , 2))
+catalogo.agregarLibro(Libro("Rayuela", "Novela", "Julio Cortazar", 3.0 , 3))
+catalogo.agregarLibro(Libro("Fahrenheit 451", "Ciencia ficcion", "Ray Bradbury", 3.0 , 3))
+catalogo.agregarLibro(Libro("Ensayo sobre la ceguera", "Novela", "Jose Saramago", 3.0 , 2))
+catalogo.agregarLibro(Libro("El arte de la guerra", "Filosofia", "Sun Tzu", 3.0 , 4))
+catalogo.agregarLibro(Libro("Meditaciones", "Filosofia", "Marco Aurelio", 3.0 , 2))
+catalogo.agregarLibro(Libro("Don Quijote de la Mancha", "Clasico", "Miguel de Cervantes", 3.0 , 4))
+catalogo.agregarLibro(Libro("El señor de los anillos", "Fantasia", "J.R.R. Tolkien", 3.0 , 5))
+catalogo.agregarLibro(Libro("Dracula", "Terror", "Bram Stoker", 3.0 , 3))
+catalogo.agregarLibro(Libro("Frankenstein", "Terror", "Mary Shelley", 3.0 , 3))
+catalogo.agregarLibro(Libro("Los miserables", "Clasico", "Victor Hugo", 3.0 , 3))
+catalogo.agregarLibro(Libro("Matar a un ruiseñor", "Novela", "Harper Lee", 3.0 , 4))
+catalogo.agregarLibro(Libro("Las venas abiertas de América Latina", "Historia", "Eduardo Galeano", 3.0 , 3))
+catalogo.agregarLibro(Libro("Un mundo feliz", "Ciencia ficcion", "Aldous Huxley", 3.0 , 3))
+catalogo.agregarLibro(Libro("El retrato de Dorian Gray", "Novela", "Oscar Wilde", 3.0 , 3))
+catalogo.agregarLibro(Libro("La insoportable levedad del ser", "Novela", "Milan Kundera", 3.0 , 2))
+catalogo.agregarLibro(Libro("El psicoanalista", "Thriller", "John Katzenbach", 3.0 , 4))
+catalogo.agregarLibro(Libro("El tunel", "Novela", "Ernesto Sabato", 3.0 , 2))
+catalogo.agregarLibro(Libro("La tregua", "Novela", "Mario Benedetti", 3.0 , 3))
+catalogo.agregarLibro(Libro("La metamorfosis", "Ficcion", "Franz Kafka", 3.0 , 4))
+catalogo.agregarLibro(Libro("La rebelion de la granja", "Fabula politica", "George Orwell", 3.0 , 3))
+catalogo.agregarLibro(Libro("Como ganar amigos e influir sobre las personas", "Autoayuda", "Dale Carnegie", 3.0 , 5))
 
 # Función de ejemplo que representa el resto del sistema después del login
 def menu_funcionalidades(usuario):
@@ -57,7 +56,8 @@ def menu_funcionalidades(usuario):
         print("1. Visualizar Catalogo")
         print("2. Prestar libro")
         print("3. Consultar disponibilidad")
-        print("4. Cerrar sesión")
+        print("4. Calificar libro")
+        print("5. Cerrar sesión")
 
         opcion = input("Seleccione una opción: ").strip()
 
@@ -182,12 +182,60 @@ def menu_funcionalidades(usuario):
 
 
         elif opcion == "4":
+            #Funcionalidad 1
+            print("🔧 Ejecutando funcionalidad 4...")
+            #Preguntamos al usuario que desea hacer dentro de la funcionalidad
+            print("¿Que deseas hacer?")
+            print("1. Calificar un Libro")
+            print("2. Ver calificaciones de los libros")
+            print("3. Ver opiniones de los libros")
+             #El usuario elige una opcion
+            opcion1 = input("Selecciona una opcion: ").strip()
+            #Si el usuario elige la opcion 1, le mostramos los libros para ver cual desea escoger
+            if opcion1=="1":
+                print("Que libro deseas calificar?")
+                catalogo.mostrarCatalogo()
+            #Si el usuario elige la opcion 2, le mostramos los libros dependiendo de la categoria que desee    
+            elif opcion1=="2":
+                print("Filtrando Categoria...")
+                print("¿Cuales son tus gustos?:")
+                print("1.Novela")
+                print("2.Fantasia")
+                print("3.Matematicas")
+                print("4.Autoayuda")
+                print("5.Fabula Politica")
+                print("6.Ficcion")
+                print("7.Thriller")
+                print("8.Ciencia ficcion")
+                print("9.Historia")
+                print("10.Clasico")
+                print("11.Terror")
+                print("12.Filosofia")
+                print("13.Poesia")
+                print("14.Romance")
+                print("15.Finanzas")
+                print("16.Autoayuda")
+                print("17.Suspenso")
+                print("18.Ciencia")
+                #EL usuario escoge la categoria y dependiendo le mostramos el catalogo
+                opcion3= input("Ingresa el nombre la categoria que deseas: ").strip()
+                catalogo.filtrarCategoria(opcion3)
+
+            #Si el usuario escoge la opcion 3, le mostramos el catalogo dependiendo del autor o titulo que desee
+            elif opcion1=="3":
+                print("Mostrando Busqueda Personalizada...")
+                print("¿Que te apetece leer hoy?:")
+                opcion4= input("Escribe el libro que quieras leer por titulo o autor:").strip()
+                catalogo.filtrarBusquedaPersonalizada(opcion4)
+            
+
+        elif opcion == "5":
             #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
             print("🔒 Sesión cerrada.")
             break
         # AÑADIR MAS IF SI SE AÑADEN MAS FUNCIONALIDADES
         else:
-            print("⚠️ Opción no válida.")
+            print("⚠️ Opción no válida.")    
 
 # Punto de entrada del programa
 
