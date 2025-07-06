@@ -57,6 +57,8 @@ def menu_funcionalidades(usuario):
         print("2. Prestar libro")
         print("3. Consultar disponibilidad")
         print("4. Calificar libro")
+        if usuario.rol == "Administrativo":
+            print("6. Ver préstamos registrados")
         print("5. Cerrar sesión")
 
         opcion = input("Seleccione una opción: ").strip()
@@ -212,6 +214,30 @@ def menu_funcionalidades(usuario):
                 opcion8= input("Ingresa el nombre del libro: ").strip()
                 catalogo.verReseñasLibro(opcion8)
             
+        elif opcion == "6" and usuario.rol == "Administrativo":
+            prestamo_db = PrestamoDB()
+            while True:
+                print("\n📋 CONSULTA DE PRÉSTAMOS")
+                print("1. Ver todos los préstamos")
+                print("2. Buscar préstamo por libro")
+                print("3. Buscar por usuario")
+                print("4. Volver")
+                subop = input("Seleccione una opción: ").strip()
+
+                if subop == "1":
+                    prestamo_db.ver_todos_los_prestamos()
+                elif subop == "2":
+                    texto = input("Ingrese título o parte del título del libro: ").strip()
+                    prestamo_db.buscar_por_libro(texto)
+                elif subop == "3":
+                    nombre = input("Ingrese el nombre completo del usuario: ").strip()
+                    prestamo_db.buscar_por_usuario(nombre)
+                elif subop == "4":
+                    break
+                else:
+                    print("⚠️ Opción no válida.")
+            prestamo_db.cerrar()
+
 
         elif opcion == "5":
             #BORRAR ESTO Y AÑADIR FUNCIONALIDAD
