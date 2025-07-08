@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 from autenticacion import UsuarioDB, Usuario
 from Libro import LibroDB
 from disponibilidad import GestorDisponibilidad
+from Prestamo import PrestamoDB
 
 COLOR_FONDO = "#003366"
 COLOR_BOTON = "#0055A5"
@@ -137,21 +138,27 @@ class App:
         self.limpiar_marco()
         tk.Label(self.marco, text=f"Bienvenido, {self.usuario_actual.nombre_completo}",
              bg=COLOR_FONDO, fg=COLOR_TEXTO, font=("Helvetica", 14, "bold")).pack(pady=(20, 10))
-
+    
         # Funcionalidad 1: Mostrar catálogo
         tk.Button(self.marco, text="Mostrar catálogo", width=20,
               bg=COLOR_BOTON, fg=COLOR_TEXTO, command=self.mostrar_catalogo).pack(pady=5)
-        
+    
+        # Funcionalidad 2: Ver disponibilidad
         tk.Button(self.marco, text="Ver disponibilidad", width=20,
               bg=COLOR_BOTON, fg=COLOR_TEXTO, command=self.mostrar_disponibilidad).pack(pady=5)
-
-        # Funcionalidades vacías como ejemplo
-        for i in range(3, 5):
-            tk.Button(self.marco, text=f"Funcionalidad {i}", width=20,
-                  bg=COLOR_BOTON, fg=COLOR_TEXTO).pack(pady=5)
-
+    
+        # Funcionalidad 3: Prestar libro (nueva ventana vacía)
+        tk.Button(self.marco, text="Prestar libro", width=20,
+              bg=COLOR_BOTON, fg=COLOR_TEXTO, command=self.mostrar_prestamo).pack(pady=5)
+    
+        # Funcionalidad 4 (vacía)
+        tk.Button(self.marco, text="Funcionalidad 4", width=20,
+              bg=COLOR_BOTON, fg=COLOR_TEXTO).pack(pady=5)
+    
+        # Cerrar sesión
         tk.Button(self.marco, text="Cerrar sesión", bg="red", fg="white",
               command=self.mostrar_inicio).pack(pady=(30, 10))
+
 
     def mostrar_catalogo(self):
         ventana = tk.Toplevel(self.ventana)
@@ -319,7 +326,109 @@ class App:
         # Mostrar todos los horarios por defecto
         mostrar_resultados()
 
-
+    def mostrar_prestamo(self):
+        ventana = tk.Toplevel(self.ventana)
+        ventana.title("Prestar libro")
+        ventana.configure(bg=COLOR_FONDO)
+        ventana.geometry("600x500")
+    
+        tk.Label(ventana, text="Funcionalidad: Prestar libro",
+                 bg=COLOR_FONDO, fg=COLOR_TEXTO, font=("Helvetica", 16, "bold")).pack(pady=10)
+    
+        db_libros = LibroDB()
+        db_prestamos = PrestamoDB()
+    
+        # --- Filtros ---
+        filtro_frame = tk.Frame(ventana, bg=COLOR_FONDO)
+        filtro_frame.pack(pady=(0, 10))
+    
+        tk.Label(filtro_frame, text="Buscar (nombre o autor):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
+        entrada_busqueda = tk.Entry(filtro_frame)
+        entrada_busqueda.grid(row=0, column=1, padx=5)
+    
+        tk.Label(filtro_frame, text="Filtrar por categoría:", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=2, padx=5)
+        categorias = ["Todas"] + list({libro.categoria for libro in db_libros.obtener_todos()})
+        categoria_var = tk.StringVar(value="Todas")
+        categoria_menu = ttk.Combobox(filtro_frame, textvariable=categoria_var, values=categorias, state="readonly")
+        categoria_menu.grid(row=0, column=3, padx=5)
+    
+        # Área scroll
+        frame_scroll = tk.Frame(ventana, bg=COLOR_FONDO)
+        frame_scroll.pack(expand=True, fill="both", padx=10, pady=10)
+    
+        canvas = tk.Canvas(frame_scroll, bg=COLOR_FONDO, highlightthickness=0)
+        scrollbar = tk.Scrollbar(frame_scroll, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=COLOR_FONDO)
+    
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+    
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
+        # Función para prestar un libro
+        def prestar_libro(libro):
+            try:
+                curso_num = int(self.usuario_actual.curso)
+            except ValueError:
+                messagebox.showerror("Error", "El curso del usuario no es válido.")
+                return
+    
+            if curso_num <= 5:
+                messagebox.showwarning("⛔ No autorizado", "Solo los cursos superiores a 5 pueden realizar préstamos.")
+                return
+    
+            if self.usuario_actual.sanciones > 3:
+                messagebox.showwarning("⛔ No autorizado", "Tienes más de 3 sanciones. No puedes realizar préstamos.")
+                return
+    
+            if libro.cantidad <= 0:
+                messagebox.showwarning("⛔ No disponible", "No hay ejemplares disponibles de este libro.")
+                return
+    
+            fecha_devolucion = db_prestamos.realizar_prestamo(self.usuario_actual, libro)
+            db_libros.restar_cantidad(libro.nombre)
+    
+            messagebox.showinfo("✅ Préstamo realizado", f"Devuelve el libro antes del {fecha_devolucion}.")
+            actualizar_lista()
+    
+        # Función para actualizar la lista de libros
+        def actualizar_lista():
+            for widget in scrollable_frame.winfo_children():
+                widget.destroy()
+    
+            texto_busqueda = entrada_busqueda.get().lower()
+            categoria_seleccionada = categoria_var.get()
+    
+            libros = db_libros.obtener_todos()
+            filtrados = []
+            for libro in libros:
+                if libro.cantidad <= 0:
+                    continue  # Solo mostrar libros disponibles
+                coincide_categoria = (categoria_seleccionada == "Todas" or libro.categoria == categoria_seleccionada)
+                coincide_busqueda = (texto_busqueda in libro.nombre.lower() or texto_busqueda in libro.autor.lower())
+                if coincide_categoria and coincide_busqueda:
+                    filtrados.append(libro)
+    
+            if not filtrados:
+                tk.Label(scrollable_frame, text="❌ No se encontraron libros disponibles.",
+                         bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=10)
+            else:
+                for libro in filtrados:
+                    texto = f"{libro.nombre} | Categoría: {libro.categoria} | Autor: {libro.autor} | Cantidad: {libro.cantidad}"
+                    frame_libro = tk.Frame(scrollable_frame, bg=COLOR_FONDO)
+                    frame_libro.pack(fill="x", pady=5, padx=5)
+                    tk.Label(frame_libro, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                             anchor="w", justify="left", wraplength=450).pack(side="left", fill="x", expand=True)
+                    tk.Button(frame_libro, text="📚 Prestar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
+                              command=lambda l=libro: prestar_libro(l)).pack(side="right")
+    
+        # Botón para aplicar filtros
+        tk.Button(filtro_frame, text="🔍 Buscar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
+                  command=actualizar_lista).grid(row=0, column=4, padx=10)
+    
+        actualizar_lista()
 
 if __name__ == "__main__":
     App()

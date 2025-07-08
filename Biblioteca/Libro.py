@@ -30,6 +30,15 @@ class LibroDB:
         self.cursor.execute("SELECT nombre, categoria, autor, cantidad FROM libros")
         filas = self.cursor.fetchall()
         return [Libro(*fila) for fila in filas]
+    
+    def restar_cantidad(self, nombre_libro):
+        self.cursor.execute("""
+            UPDATE libros
+            SET cantidad = cantidad - 1
+            WHERE nombre = ? AND cantidad > 0
+        """, (nombre_libro,))
+        self.conn.commit()
+
    
 
 # Lista de libros a insertar
