@@ -239,11 +239,11 @@ class App:
         frame_opciones = tk.Frame(ventana, bg=COLOR_FONDO)
         frame_opciones.pack(pady=5)
     
-        tk.Label(frame_opciones, text="📅 Fecha (YYYY-MM-DD):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
+        tk.Label(frame_opciones, text="Fecha (YYYY-MM-DD):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
         entry_fecha = tk.Entry(frame_opciones)
         entry_fecha.grid(row=0, column=1)
     
-        tk.Label(frame_opciones, text="🕓 Hora (7-14):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=1, column=0, padx=5)
+        tk.Label(frame_opciones, text="Hora (7-14):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=1, column=0, padx=5)
         entry_hora = tk.Entry(frame_opciones)
         entry_hora.grid(row=1, column=1)
     
@@ -293,9 +293,24 @@ class App:
                          bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=10)
             else:
                 for entrada in resultados:
-                    texto = f"{entrada.fecha} a las {entrada.hora}:00 — Disponible: {entrada.estado}"
-                    tk.Label(scrollable_frame, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
-                             anchor="w", justify="left").pack(anchor="w", padx=5, pady=3)
+                    fila = tk.Frame(scrollable_frame, bg=COLOR_FONDO)
+                    fila.pack(fill="x", padx=5, pady=3)
+    
+                    texto = f"{entrada.fecha} a las {entrada.hora}:00 — Disponible"
+                    tk.Label(fila, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO, anchor="w").pack(side="left", expand=True)
+    
+                    def hacer_reserva(fecha=entrada.fecha, hora=entrada.hora):
+                        gestor.cursor.execute("""
+                            UPDATE disponibilidad
+                            SET disponibilidad = 'no', usuario = ?
+                            WHERE fecha = ? AND hora = ? AND disponibilidad = 'si'
+                        """, (self.usuario_actual.nombre_completo, fecha, hora))
+                        gestor.conn.commit()
+                        messagebox.showinfo("Reserva exitosa", f"Reservaste {fecha} a las {hora}:00")
+                        mostrar_resultados()
+    
+                    tk.Button(fila, text="Reservar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
+                              command=hacer_reserva).pack(side="right", padx=5)
     
         # Botón buscar
         tk.Button(ventana, text="🔍 Buscar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
@@ -303,7 +318,6 @@ class App:
     
         # Mostrar todos los horarios por defecto
         mostrar_resultados()
-
 
 
 
