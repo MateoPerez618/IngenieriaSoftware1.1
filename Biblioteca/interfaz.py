@@ -131,38 +131,39 @@ class App:
         tk.Label(self.marco, text="Iniciar sesión", bg=COLOR_FONDO, fg=COLOR_TEXTO,
                  font=("Helvetica", 14, "bold")).pack(pady=(20, 10))
     
-        # Etiqueta para el campo de nombre completo
+        # Etiqueta y campo de entrada para el nombre completo
         tk.Label(self.marco, text="Nombre completo:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        # Campo de entrada para el nombre
         entry_nombre = tk.Entry(self.marco)
         entry_nombre.pack()
     
-        # Etiqueta para el campo de contraseña
+        # Etiqueta y campo de entrada para la contraseña
         tk.Label(self.marco, text="Contraseña:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        # Campo de entrada para la contraseña (oculta con '*')
         entry_pass = tk.Entry(self.marco, show="*")
         entry_pass.pack()
     
         # Función interna que se ejecuta al presionar el botón "Ingresar"
         def intentar_login():
-            nombre = entry_nombre.get().strip()     # Obtiene el texto del campo de nombre
-            password = entry_pass.get().strip()     # Obtiene el texto del campo de contraseña
-            usuario = self.db.login(nombre, password)  # Intenta iniciar sesión con esos datos
+            nombre = entry_nombre.get().strip()
+            password = entry_pass.get().strip()
+    
+            usuario = self.db.login(nombre, password)
     
             if usuario:
-                # Si las credenciales son correctas, guarda el usuario y muestra el menú principal
-                self.usuario_actual = usuario
-                self.mostrar_funcionalidades()
+                if usuario.autenticado.lower() == "si":
+                    self.usuario_actual = usuario
+                    self.mostrar_funcionalidades()
+                else:
+                    messagebox.showwarning("Acceso denegado", "Este usuario no está autenticado para ingresar.")
             else:
-                # Si el login falla, muestra un mensaje de error
                 messagebox.showerror("Error", "Credenciales inválidas.")
     
-        # Botón para iniciar sesión, llama a intentar_login cuando se hace clic
+        # Botón para iniciar sesión
         tk.Button(self.marco, text="Ingresar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
                   command=intentar_login).pack(pady=15)
     
         # Botón para volver al menú principal de inicio
         tk.Button(self.marco, text="Volver", command=self.mostrar_inicio).pack()
+
     
     #Funcionalidad de registro (primera parte, solo nombre y curso para validar que no exista)
     def mostrar_registro_paso1(self):
@@ -221,6 +222,11 @@ class App:
         tk.Label(self.marco, text=f"Nombre: {nombre}", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
         tk.Label(self.marco, text=f"Curso: {curso}", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
     
+        # Campo para ingresar correo electrónico
+        tk.Label(self.marco, text="Correo electrónico:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
+        entry_correo = tk.Entry(self.marco)
+        entry_correo.pack()
+    
         # Campo para ingresar contraseña
         tk.Label(self.marco, text="Contraseña:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
         entry_pass = tk.Entry(self.marco, show="*")
@@ -236,16 +242,26 @@ class App:
     
         # Función que crea el usuario y lo registra en la base de datos
         def registrar():
+            correo = entry_correo.get().strip()
             password = entry_pass.get().strip()
             rol = rol_var.get()
     
-            # Valida que la contraseña no esté vacía
-            if not password:
-                messagebox.showerror("Error", "La contraseña es obligatoria.")
+            # Validaciones
+            if not correo or not password:
+                messagebox.showerror("Error", "Todos los campos son obligatorios.")
                 return
     
-            # Crea un objeto Usuario con los datos proporcionados
-            usuario = Usuario(nombre, password, curso, rol)
+            # Crea un objeto Usuario con los datos proporcionados (autenticado='no' por defecto)
+            usuario = Usuario(
+                nombre_completo=nombre,
+                password=password,
+                curso=curso,
+                rol=rol,
+                sanciones=0,
+                penalizacion=False,
+                correo=correo,
+                autenticado="no"
+            )
     
             # Intenta registrar el usuario en la base de datos
             if self.db.registrar(usuario):
@@ -258,7 +274,8 @@ class App:
     
         # Botón para volver al paso 1 del registro
         tk.Button(self.marco, text="Volver", command=self.mostrar_registro_paso1).pack()
-
+    
+    
     #Funcionalidad de catalogo
     def mostrar_catalogo(self):
         # Crea una nueva ventana para mostrar el catálogo
@@ -637,4 +654,7 @@ class App:
 
 if __name__ == "__main__":
     App()
+    
+
+    
 
