@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime, timedelta
 from autenticacion import UsuarioDB, Usuario
 from Libro import LibroDB
 from disponibilidad import GestorDisponibilidad
@@ -691,23 +692,17 @@ class App:
         scrollbar = tk.Scrollbar(frame_scroll, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=COLOR_FONDO)
     
-        # Asegura que el scroll se adapte al contenido
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-    
-        # Asegura que el canvas ocupe todo el espacio disponible
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
     
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
     
-        # Cargar los préstamos del usuario actual
+        # Cargar los préstamos del usuario actual (ahora también el estado)
         db_prestamos = PrestamoDB()
         db_prestamos.cursor.execute("""
-            SELECT libro, fecha_prestamo, fecha_devolucion
+            SELECT id, libro, fecha_prestamo, fecha_devolucion, estado_devolucion
             FROM prestamos
             WHERE usuario = ?
         """, (self.usuario_actual.nombre_completo,))
@@ -722,32 +717,154 @@ class App:
             ).pack(pady=20)
             return
     
-        # Mostrar cada préstamo adaptándose al ancho del scrollable_frame
-        for libro, fecha_prestamo, fecha_devolucion in prestamos:
+        for id_prestamo, libro, fecha_prestamo, fecha_devolucion, estado in prestamos:
+            frame_prestamo = tk.Frame(scrollable_frame, bg=COLOR_FONDO, relief="groove", borderwidth=1)
+            frame_prestamo.pack(fill="x", expand=True, padx=5, pady=5)
+    
             info = (
                 f"Título: {libro}\n"
                 f"Fecha préstamo: {fecha_prestamo}\n"
-                f"Fecha devolución: {fecha_devolucion}"
+                f"Fecha devolución: {fecha_devolucion}\n"
+                f"Estado: {estado.capitalize()}"
             )
+    
             tk.Label(
-                scrollable_frame,
+                frame_prestamo,
                 text=info,
                 bg=COLOR_FONDO,
                 fg=COLOR_TEXTO,
                 anchor="w",
                 justify="left",
-                relief="groove",
-                borderwidth=1,
                 padx=10,
                 pady=5
-            ).pack(fill="x", expand=True, padx=5, pady=5)
+            ).pack(side="left", fill="both", expand=True)
+    
+            # Si el estado es "pendiente", permite solicitar devolución
+            if estado == "pendiente":
+                def solicitar_devolucion(id=id_prestamo):
+                    db_prestamos.cursor.execute("""
+                        UPDATE prestamos SET estado_devolucion = 'solicitada'
+                        WHERE id = ?
+                    """, (id,))
+                    db_prestamos.conn.commit()
+                    self.visualizar_prestamos(marco_derecho)  # refrescar
+    
+                tk.Button(
+                    frame_prestamo,
+                    text="Devolver",
+                    bg=COLOR_BOTON,
+                    fg=COLOR_TEXTO,
+                    command=solicitar_devolucion
+                ).pack(side="right", padx=10, pady=10)
+    
 
     def prestamos_administrativo(self):
         ventana = tk.Toplevel(self.ventana)
-        ventana.title("Visualizar préstamos")
-        ventana.geometry("400x300")
+        ventana.title("Aprobar devoluciones")
+        ventana.geometry("700x500")
         ventana.configure(bg=COLOR_FONDO)
-        tk.Label(ventana, text="Ventana: Visualizar préstamos", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
+    
+        tk.Label(
+            ventana,
+            text="📥 Solicitudes de devolución",
+            bg=COLOR_FONDO,
+            fg=COLOR_TEXTO,
+            font=("Helvetica", 14, "bold")
+        ).pack(pady=10)
+    
+        frame_scroll = tk.Frame(ventana, bg=COLOR_FONDO)
+        frame_scroll.pack(fill="both", expand=True)
+    
+        canvas = tk.Canvas(frame_scroll, bg=COLOR_FONDO, highlightthickness=0)
+        scrollbar = tk.Scrollbar(frame_scroll, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=COLOR_FONDO)
+    
+        scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+    
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
+        db_prestamos = PrestamoDB()
+        db_libros = LibroDB()
+        db_usuarios = UsuarioDB()
+    
+        # Obtener préstamos con estado 'solicitada'
+        db_prestamos.cursor.execute("""
+            SELECT id, usuario, libro, fecha_prestamo, fecha_devolucion
+            FROM prestamos
+            WHERE estado_devolucion = 'solicitada'
+        """)
+        prestamos = db_prestamos.cursor.fetchall()
+    
+        if not prestamos:
+            tk.Label(scrollable_frame, text="No hay solicitudes de devolución.",
+                     bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
+            return
+    
+        for id_prestamo, usuario, libro, fecha_prestamo, fecha_devolucion in prestamos:
+            frame = tk.Frame(scrollable_frame, bg=COLOR_FONDO, relief="groove", borderwidth=1)
+            frame.pack(fill="x", padx=10, pady=5)
+    
+            texto = (
+                f"Usuario: {usuario}\n"
+                f"Libro: {libro}\n"
+                f"Fecha préstamo: {fecha_prestamo}\n"
+                f"Fecha devolución: {fecha_devolucion}"
+            )
+    
+            tk.Label(frame, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                     anchor="w", justify="left", padx=10, pady=5).pack(side="left", fill="both", expand=True)
+    
+            # Función para aceptar devolución
+            def aceptar(id=id_prestamo, libro_nombre=libro):
+                # Eliminar préstamo
+                db_prestamos.cursor.execute("DELETE FROM prestamos WHERE id = ?", (id,))
+                db_prestamos.conn.commit()
+    
+                # Sumar uno a la cantidad del libro
+                db_libros.cursor.execute("""
+                    UPDATE libros SET cantidad = cantidad + 1
+                    WHERE nombre = ?
+                """, (libro_nombre,))
+                db_libros.conn.commit()
+    
+                messagebox.showinfo("Éxito", f"Devolución de '{libro_nombre}' aceptada.")
+                ventana.destroy()
+                self.prestamos_administrativo()
+    
+            # Función para rechazar devolución
+            def rechazar(id=id_prestamo, usuario_nombre=usuario):
+                # Sumar una sanción al usuario
+                db_usuarios.cursor.execute("""
+                    UPDATE usuarios SET sanciones = sanciones + 1
+                    WHERE nombre_completo = ?
+                """, (usuario_nombre,))
+                db_usuarios.conn.commit()
+    
+                # Calcular nueva fecha de devolución (+15 días)
+                nueva_fecha = (datetime.now() + timedelta(days=15)).strftime("%Y-%m-%d")
+    
+                # Revertir estado y actualizar fecha_devolucion
+                db_prestamos.cursor.execute("""
+                    UPDATE prestamos
+                    SET estado_devolucion = 'pendiente',
+                        fecha_devolucion = ?
+                    WHERE id = ?
+                """, (nueva_fecha, id))
+                db_prestamos.conn.commit()
+    
+                messagebox.showinfo("Rechazado", f"Devolución rechazada. Nueva fecha de devolución: {nueva_fecha}")
+                ventana.destroy()
+                self.prestamos_administrativo()
+    
+            botones = tk.Frame(frame, bg=COLOR_FONDO)
+            botones.pack(side="right", padx=5, pady=5)
+    
+            tk.Button(botones, text="Aceptar ✅", bg="green", fg="white", command=aceptar).pack(pady=2)
+            tk.Button(botones, text="Rechazar ❌", bg="red", fg="white", command=rechazar).pack(pady=2)
+
     
     def registrar_administrativo(self):
         ventana = tk.Toplevel(self.ventana)
