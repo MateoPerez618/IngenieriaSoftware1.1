@@ -760,17 +760,29 @@ class App:
 
     def prestamos_administrativo(self):
         ventana = tk.Toplevel(self.ventana)
-        ventana.title("Aprobar devoluciones")
-        ventana.geometry("700x500")
+        ventana.title("Administrar préstamos")
+        ventana.geometry("750x550")
         ventana.configure(bg=COLOR_FONDO)
     
         tk.Label(
             ventana,
-            text="📥 Solicitudes de devolución",
+            text="📥 Gestión de préstamos",
             bg=COLOR_FONDO,
             fg=COLOR_TEXTO,
             font=("Helvetica", 14, "bold")
         ).pack(pady=10)
+    
+        # ---- Filtros ----
+        frame_filtros = tk.Frame(ventana, bg=COLOR_FONDO)
+        frame_filtros.pack(pady=5)
+    
+        tk.Label(frame_filtros, text="📚 Libro:", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
+        entry_libro = tk.Entry(frame_filtros)
+        entry_libro.grid(row=0, column=1, padx=5)
+    
+        tk.Label(frame_filtros, text="👤 Usuario:", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=2, padx=5)
+        entry_usuario = tk.Entry(frame_filtros)
+        entry_usuario.grid(row=0, column=3, padx=5)
     
         frame_scroll = tk.Frame(ventana, bg=COLOR_FONDO)
         frame_scroll.pack(fill="both", expand=True)
@@ -790,80 +802,101 @@ class App:
         db_libros = LibroDB()
         db_usuarios = UsuarioDB()
     
-        # Obtener préstamos con estado 'solicitada'
-        db_prestamos.cursor.execute("""
-            SELECT id, usuario, libro, fecha_prestamo, fecha_devolucion
-            FROM prestamos
-            WHERE estado_devolucion = 'solicitada'
-        """)
-        prestamos = db_prestamos.cursor.fetchall()
+        def cargar_prestamos():
+            for widget in scrollable_frame.winfo_children():
+                widget.destroy()
     
-        if not prestamos:
-            tk.Label(scrollable_frame, text="No hay solicitudes de devolución.",
-                     bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
-            return
+            libro_filtro = entry_libro.get().strip().lower()
+            usuario_filtro = entry_usuario.get().strip().lower()
     
-        for id_prestamo, usuario, libro, fecha_prestamo, fecha_devolucion in prestamos:
-            frame = tk.Frame(scrollable_frame, bg=COLOR_FONDO, relief="groove", borderwidth=1)
-            frame.pack(fill="x", padx=10, pady=5)
+            # Traer todos los préstamos
+            db_prestamos.cursor.execute("""
+                SELECT id, usuario, libro, fecha_prestamo, fecha_devolucion, estado_devolucion
+                FROM prestamos
+                ORDER BY fecha_prestamo DESC
+            """)
+            prestamos = db_prestamos.cursor.fetchall()
     
-            texto = (
-                f"Usuario: {usuario}\n"
-                f"Libro: {libro}\n"
-                f"Fecha préstamo: {fecha_prestamo}\n"
-                f"Fecha devolución: {fecha_devolucion}"
-            )
+            # Aplicar filtros
+            prestamos_filtrados = []
+            for prestamo in prestamos:
+                _, usuario, libro, _, _, _ = prestamo
+                if libro_filtro and libro_filtro not in libro.lower():
+                    continue
+                if usuario_filtro and usuario_filtro not in usuario.lower():
+                    continue
+                prestamos_filtrados.append(prestamo)
     
-            tk.Label(frame, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
-                     anchor="w", justify="left", padx=10, pady=5).pack(side="left", fill="both", expand=True)
+            if not prestamos_filtrados:
+                tk.Label(scrollable_frame, text="No hay préstamos que coincidan con los filtros.",
+                         bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
+                return
     
-            # Función para aceptar devolución
-            def aceptar(id=id_prestamo, libro_nombre=libro):
-                # Eliminar préstamo
-                db_prestamos.cursor.execute("DELETE FROM prestamos WHERE id = ?", (id,))
-                db_prestamos.conn.commit()
+            for id_prestamo, usuario, libro, fecha_prestamo, fecha_devolucion, estado in prestamos_filtrados:
+                frame = tk.Frame(scrollable_frame, bg=COLOR_FONDO, relief="groove", borderwidth=1)
+                frame.pack(fill="x", padx=10, pady=5)
     
-                # Sumar uno a la cantidad del libro
-                db_libros.cursor.execute("""
-                    UPDATE libros SET cantidad = cantidad + 1
-                    WHERE nombre = ?
-                """, (libro_nombre,))
-                db_libros.conn.commit()
+                texto = (
+                    f"Usuario: {usuario}\n"
+                    f"Libro: {libro}\n"
+                    f"Fecha préstamo: {fecha_prestamo}\n"
+                    f"Fecha devolución: {fecha_devolucion}\n"
+                    f"Estado: {estado}"
+                )
     
-                messagebox.showinfo("Éxito", f"Devolución de '{libro_nombre}' aceptada.")
-                ventana.destroy()
-                self.prestamos_administrativo()
+                tk.Label(frame, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                         anchor="w", justify="left", padx=10, pady=5).pack(side="left", fill="both", expand=True)
     
-            # Función para rechazar devolución
-            def rechazar(id=id_prestamo, usuario_nombre=usuario):
-                # Sumar una sanción al usuario
-                db_usuarios.cursor.execute("""
-                    UPDATE usuarios SET sanciones = sanciones + 1
-                    WHERE nombre_completo = ?
-                """, (usuario_nombre,))
-                db_usuarios.conn.commit()
+                if estado == "solicitada":
+                    def aceptar(id=id_prestamo, libro_nombre=libro):
+                        db_prestamos.cursor.execute("DELETE FROM prestamos WHERE id = ?", (id,))
+                        db_prestamos.conn.commit()
     
-                # Calcular nueva fecha de devolución (+15 días)
-                nueva_fecha = (datetime.now() + timedelta(days=15)).strftime("%Y-%m-%d")
+                        db_libros.cursor.execute("""
+                            UPDATE libros SET cantidad = cantidad + 1
+                            WHERE nombre = ?
+                        """, (libro_nombre,))
+                        db_libros.conn.commit()
     
-                # Revertir estado y actualizar fecha_devolucion
-                db_prestamos.cursor.execute("""
-                    UPDATE prestamos
-                    SET estado_devolucion = 'pendiente',
-                        fecha_devolucion = ?
-                    WHERE id = ?
-                """, (nueva_fecha, id))
-                db_prestamos.conn.commit()
+                        messagebox.showinfo("Éxito", f"Devolución de '{libro_nombre}' aceptada.")
+                        cargar_prestamos()
     
-                messagebox.showinfo("Rechazado", f"Devolución rechazada. Nueva fecha de devolución: {nueva_fecha}")
-                ventana.destroy()
-                self.prestamos_administrativo()
+                    def rechazar(id=id_prestamo, usuario_nombre=usuario):
+                        db_usuarios.cursor.execute("""
+                            UPDATE usuarios SET sanciones = sanciones + 1
+                            WHERE nombre_completo = ?
+                        """, (usuario_nombre,))
+                        db_usuarios.conn.commit()
     
-            botones = tk.Frame(frame, bg=COLOR_FONDO)
-            botones.pack(side="right", padx=5, pady=5)
+                        nueva_fecha = (datetime.now() + timedelta(days=15)).strftime("%Y-%m-%d")
     
-            tk.Button(botones, text="Aceptar ✅", bg="green", fg="white", command=aceptar).pack(pady=2)
-            tk.Button(botones, text="Rechazar ❌", bg="red", fg="white", command=rechazar).pack(pady=2)
+                        db_prestamos.cursor.execute("""
+                            UPDATE prestamos
+                            SET estado_devolucion = 'pendiente',
+                                fecha_devolucion = ?
+                            WHERE id = ?
+                        """, (nueva_fecha, id))
+                        db_prestamos.conn.commit()
+    
+                        messagebox.showinfo("Rechazado", f"Devolución rechazada. Nueva fecha: {nueva_fecha}")
+                        cargar_prestamos()
+    
+                    botones = tk.Frame(frame, bg=COLOR_FONDO)
+                    botones.pack(side="right", padx=5, pady=5)
+    
+                    tk.Button(botones, text="Aceptar ✅", bg="green", fg="white", command=aceptar).pack(pady=2)
+                    tk.Button(botones, text="Rechazar ❌", bg="red", fg="white", command=rechazar).pack(pady=2)
+    
+        # Botón para aplicar filtros
+        tk.Button(
+            frame_filtros,
+            text="🔍 Filtrar",
+            bg=COLOR_BOTON,
+            fg=COLOR_TEXTO,
+            command=cargar_prestamos
+        ).grid(row=0, column=4, padx=10)
+    
+        cargar_prestamos()
 
     
     def registrar_administrativo(self):
