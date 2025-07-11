@@ -15,7 +15,7 @@ class App:
         # Crea la ventana principal de la aplicación
         self.ventana = tk.Tk()
         self.ventana.title("Sistema de Usuarios")  # Título de la ventana
-        self.ventana.geometry("500x500")           # Tamaño inicial de la ventana
+        self.ventana.geometry("1000x1000")           # Tamaño inicial de la ventana
         self.ventana.configure(bg=COLOR_FONDO)     # Color de fondo definido por constante
 
         # Instancia la base de datos de usuarios
@@ -55,72 +55,79 @@ class App:
         tk.Button(self.marco, text="Registrarse", width=20, bg=COLOR_BOTON, fg=COLOR_TEXTO,
                   font=("Helvetica", 12), command=self.mostrar_registro_paso1).pack(pady=10)
         
-    #Ventana despues del login que muestra las posibles funcionalidades
     def mostrar_funcionalidades(self):
-        # Limpia todos los widgets del marco actual antes de mostrar el contenido nuevo
         self.limpiar_marco()
     
-        # Muestra un mensaje de bienvenida con el nombre del usuario actualmente autenticado
+        # Contenedor principal que ocupa todo el espacio
+        contenedor = tk.Frame(self.marco, bg=COLOR_FONDO)
+        contenedor.place(relx=0, rely=0, relwidth=1, relheight=1)  # 100% ancho y alto
+    
+        # Marco izquierdo para funcionalidades
+        marco_izquierdo = tk.Frame(contenedor, bg=COLOR_FONDO)
+        marco_izquierdo.place(relx=0, rely=0, relwidth=0.66, relheight=1)
+    
+        # Marco derecho para visualización de préstamos
+        marco_derecho = tk.Frame(contenedor, bg=COLOR_FONDO, highlightbackground="black", highlightthickness=1)
+        marco_derecho.place(relx=0.66, rely=0, relwidth=0.34, relheight=1)
+    
+        # Submarco centrado dentro del marco izquierdo
+        centro = tk.Frame(marco_izquierdo, bg=COLOR_FONDO)
+        centro.place(relx=0.5, rely=0.5, anchor="center")
+    
+        # Mensaje de bienvenida
         tk.Label(
-            self.marco,
+            centro,
             text=f"Bienvenido, {self.usuario_actual.nombre_completo}",
             bg=COLOR_FONDO,
             fg=COLOR_TEXTO,
             font=("Helvetica", 14, "bold")
-        ).pack(pady=(20, 10))
+        ).pack(pady=(0, 10))
     
-        # ------------------------------
-        # BOTONES DE FUNCIONALIDADES
-        # ------------------------------
+        # Botones comunes a todos los roles
+        botones = [
+            ("Mostrar catálogo", self.mostrar_catalogo),
+            ("Ver disponibilidad", self.mostrar_disponibilidad),
+            ("Prestar libro", self.prestamo),
+            ("Funcionalidad 4", lambda: None),
+            ("Cerrar sesión", self.mostrar_inicio)
+        ]
     
-        # Botón para mostrar el catálogo de libros disponibles en la biblioteca
-        tk.Button(
-            self.marco,
-            text="Mostrar catálogo",
-            width=20,
-            bg=COLOR_BOTON,
-            fg=COLOR_TEXTO,
-            command=self.mostrar_catalogo
-        ).pack(pady=5)
+        for texto, comando in botones:
+            tk.Button(
+                centro,
+                text=texto,
+                width=25,
+                bg=COLOR_BOTON if texto != "Cerrar sesión" else "red",
+                fg=COLOR_TEXTO if texto != "Cerrar sesión" else "white",
+                command=comando
+            ).pack(pady=7)
     
-        # Botón para ver la disponibilidad de horarios (clases, reservas, etc.)
-        tk.Button(
-            self.marco,
-            text="Ver disponibilidad",
-            width=20,
-            bg=COLOR_BOTON,
-            fg=COLOR_TEXTO,
-            command=self.mostrar_disponibilidad
-        ).pack(pady=5)
+        # --------------------------
+        # Botones solo para ADMINISTRATIVO
+        # --------------------------
+        if self.usuario_actual.rol == "Administrativo":
+            tk.Button(
+                centro,
+                text="Visualizar préstamos",
+                width=25,
+                bg=COLOR_BOTON,
+                fg=COLOR_TEXTO,
+                command=self.abrir_ventana_visualizar_prestamos
+            ).pack(pady=7)
     
-        # Botón para acceder a la funcionalidad de préstamo de libros
-        # Esto abre una nueva ventana donde se podrá buscar y prestar un libro
-        tk.Button(
-            self.marco,
-            text="Prestar libro",
-            width=20,
-            bg=COLOR_BOTON,
-            fg=COLOR_TEXTO,
-            command=self.prestamo
-        ).pack(pady=5)
+            tk.Button(
+                centro,
+                text="Registrar usuario",
+                width=25,
+                bg=COLOR_BOTON,
+                fg=COLOR_TEXTO,
+                command=self.abrir_ventana_registrar_usuario
+            ).pack(pady=7)
     
-        # Botón para una funcionalidad futura o aún no implementada (UTILIZAR ESTA PARA SEGUIR ESCALANDO LAS FUNCIONALIDADES)
-        tk.Button(
-            self.marco,
-            text="Funcionalidad 4",
-            width=20,
-            bg=COLOR_BOTON,
-            fg=COLOR_TEXTO
-        ).pack(pady=5)
+        # Mostrar los préstamos actuales en el marco derecho
+        self.visualizar_prestamos(marco_derecho)
     
-        # Botón para cerrar la sesión actual y regresar a la pantalla de inicio
-        tk.Button(
-            self.marco,
-            text="Cerrar sesión",
-            bg="red",
-            fg="white",
-            command=self.mostrar_inicio
-        ).pack(pady=(30, 10))
+
 
     #Funcionalidad de login
     def mostrar_login(self):
@@ -651,7 +658,93 @@ class App:
         # Mostrar la lista por defecto al abrir la ventana
         actualizar_lista()
 
-
+    def visualizar_prestamos(self, marco_derecho):
+        # Limpia todo el contenido anterior del marco derecho
+        for widget in marco_derecho.winfo_children():
+            widget.destroy()
+    
+        # Establece borde negro y color de fondo coherente
+        marco_derecho.config(
+            bg=COLOR_FONDO,
+            highlightbackground="black",
+            highlightthickness=2
+        )
+    
+        # Crea un contenedor interior que se adapta al tamaño completo
+        contenedor = tk.Frame(marco_derecho, bg=COLOR_FONDO)
+        contenedor.pack(fill="both", expand=True)
+    
+        # Título superior que se adapta horizontalmente
+        tk.Label(
+            contenedor,
+            text="📚 Préstamos actuales",
+            bg=COLOR_FONDO,
+            fg=COLOR_TEXTO,
+            font=("Helvetica", 14, "bold")
+        ).pack(pady=(10, 5), fill="x")
+    
+        # Frame con scroll que se adapta completamente
+        frame_scroll = tk.Frame(contenedor, bg=COLOR_FONDO)
+        frame_scroll.pack(fill="both", expand=True)
+    
+        canvas = tk.Canvas(frame_scroll, bg=COLOR_FONDO, highlightthickness=0)
+        scrollbar = tk.Scrollbar(frame_scroll, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas, bg=COLOR_FONDO)
+    
+        # Asegura que el scroll se adapte al contenido
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+    
+        # Asegura que el canvas ocupe todo el espacio disponible
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+    
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
+        # Cargar los préstamos del usuario actual
+        db_prestamos = PrestamoDB()
+        db_prestamos.cursor.execute("""
+            SELECT libro, fecha_prestamo, fecha_devolucion
+            FROM prestamos
+            WHERE usuario = ?
+        """, (self.usuario_actual.nombre_completo,))
+        prestamos = db_prestamos.cursor.fetchall()
+    
+        if not prestamos:
+            tk.Label(
+                scrollable_frame,
+                text="No tienes préstamos activos.",
+                bg=COLOR_FONDO,
+                fg=COLOR_TEXTO
+            ).pack(pady=20)
+            return
+    
+        # Mostrar cada préstamo adaptándose al ancho del scrollable_frame
+        for libro, fecha_prestamo, fecha_devolucion in prestamos:
+            info = (
+                f"Título: {libro}\n"
+                f"Fecha préstamo: {fecha_prestamo}\n"
+                f"Fecha devolución: {fecha_devolucion}"
+            )
+            tk.Label(
+                scrollable_frame,
+                text=info,
+                bg=COLOR_FONDO,
+                fg=COLOR_TEXTO,
+                anchor="w",
+                justify="left",
+                relief="groove",
+                borderwidth=1,
+                padx=10,
+                pady=5
+            ).pack(fill="x", expand=True, padx=5, pady=5)
+    
+    
+        
+        
 if __name__ == "__main__":
     App()
     
