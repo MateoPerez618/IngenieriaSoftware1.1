@@ -63,6 +63,31 @@ class UsuarioDB:
     def existe_usuario_por_nombre_y_curso(self, nombre, curso):
         self.cursor.execute("SELECT 1 FROM usuarios WHERE nombre_completo = ? AND curso = ?", (nombre, curso))
         return self.cursor.fetchone() is not None
+    
+    def obtener_no_autenticados(self):
+        self.cursor.execute("""
+            SELECT nombre_completo, curso, rol, correo FROM usuarios
+            WHERE autenticado = 'no'
+        """)
+        filas = self.cursor.fetchall()
+        return [{
+            "nombre_completo": fila[0],
+            "curso": fila[1],
+            "rol": fila[2],
+            "correo": fila[3]
+        } for fila in filas]
+    
+    def eliminar_usuario(self, nombre_completo):
+        self.cursor.execute("DELETE FROM usuarios WHERE nombre_completo = ?", (nombre_completo,))
+        self.conn.commit()
+
+    def autenticar_usuario(self, nombre_completo):
+        self.cursor.execute("""
+            UPDATE usuarios SET autenticado = 'si' WHERE nombre_completo = ?
+        """, (nombre_completo,))
+        self.conn.commit()
+
+
 
 
     def cerrar(self):

@@ -91,17 +91,7 @@ class App:
             ("Funcionalidad 4", lambda: None),
             ("Cerrar sesión", self.mostrar_inicio)
         ]
-    
-        for texto, comando in botones:
-            tk.Button(
-                centro,
-                text=texto,
-                width=25,
-                bg=COLOR_BOTON if texto != "Cerrar sesión" else "red",
-                fg=COLOR_TEXTO if texto != "Cerrar sesión" else "white",
-                command=comando
-            ).pack(pady=7)
-    
+
         # --------------------------
         # Botones solo para ADMINISTRATIVO
         # --------------------------
@@ -112,7 +102,7 @@ class App:
                 width=25,
                 bg=COLOR_BOTON,
                 fg=COLOR_TEXTO,
-                command=self.abrir_ventana_visualizar_prestamos
+                command=self.prestamos_administrativo
             ).pack(pady=7)
     
             tk.Button(
@@ -121,7 +111,17 @@ class App:
                 width=25,
                 bg=COLOR_BOTON,
                 fg=COLOR_TEXTO,
-                command=self.abrir_ventana_registrar_usuario
+                command=self.registrar_administrativo
+            ).pack(pady=7)
+    
+        for texto, comando in botones:
+            tk.Button(
+                centro,
+                text=texto,
+                width=25,
+                bg=COLOR_BOTON if texto != "Cerrar sesión" else "red",
+                fg=COLOR_TEXTO if texto != "Cerrar sesión" else "white",
+                command=comando
             ).pack(pady=7)
     
         # Mostrar los préstamos actuales en el marco derecho
@@ -741,9 +741,77 @@ class App:
                 padx=10,
                 pady=5
             ).pack(fill="x", expand=True, padx=5, pady=5)
+
+    def prestamos_administrativo(self):
+        ventana = tk.Toplevel(self.ventana)
+        ventana.title("Visualizar préstamos")
+        ventana.geometry("400x300")
+        ventana.configure(bg=COLOR_FONDO)
+        tk.Label(ventana, text="Ventana: Visualizar préstamos", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
     
+    def registrar_administrativo(self):
+        ventana = tk.Toplevel(self.ventana)
+        ventana.title("Registrar usuarios pendientes")
+        ventana.geometry("600x400")
+        ventana.configure(bg=COLOR_FONDO)
     
-        
+        tk.Label(ventana, text="Usuarios pendientes de autenticación", bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                 font=("Helvetica", 14, "bold")).pack(pady=10)
+    
+        # Marco scrollable para la lista
+        frame_scroll = tk.Frame(ventana, bg=COLOR_FONDO)
+        frame_scroll.pack(expand=True, fill="both", padx=10, pady=10)
+    
+        canvas = tk.Canvas(frame_scroll, bg=COLOR_FONDO, highlightthickness=0)
+        scrollbar = tk.Scrollbar(frame_scroll, orient="vertical", command=canvas.yview)
+        lista_frame = tk.Frame(canvas, bg=COLOR_FONDO)
+    
+        lista_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=lista_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+    
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+    
+        # Función para recargar los datos
+        def cargar_usuarios():
+            for widget in lista_frame.winfo_children():
+                widget.destroy()
+    
+            usuarios = self.db.obtener_no_autenticados()
+    
+            if not usuarios:
+                tk.Label(lista_frame, text="✅ No hay usuarios pendientes de autenticación.",
+                         bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
+            else:
+                for u in usuarios:
+                    fila = tk.Frame(lista_frame, bg=COLOR_FONDO)
+                    fila.pack(fill="x", pady=5)
+                
+                    texto = f"{u['nombre_completo']} | Curso: {u['curso']} | Rol: {u['rol']} | Correo: {u['correo']}"
+                    tk.Label(fila, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                             anchor="w", justify="left", wraplength=350).pack(side="left", fill="x", expand=True)
+                    
+                    # Botón para eliminar el registro
+                    def borrar(nombre=u['nombre_completo']):
+                        confirmacion = messagebox.askyesno("Confirmar eliminación", f"¿Estás seguro de borrar a '{nombre}'?")
+                        if confirmacion:
+                            self.db.eliminar_usuario(nombre)
+                            messagebox.showinfo("Registro eliminado", f"El usuario '{nombre}' ha sido borrado.")
+                            cargar_usuarios()
+                
+                    tk.Button(fila, text="Borrar registro", bg="red", fg="white",
+                              command=borrar).pack(side="right", padx=5)
+                    # Botón para aceptar el registro
+                    def aceptar(nombre=u['nombre_completo']):
+                        self.db.autenticar_usuario(nombre)
+                        messagebox.showinfo("Registro aprobado", f"El usuario '{nombre}' ha sido autenticado.")
+                        cargar_usuarios()
+                
+                    tk.Button(fila, text="Aceptar registro", bg=COLOR_BOTON, fg=COLOR_TEXTO,
+                              command=aceptar).pack(side="right", padx=5)
+    
+        cargar_usuarios()     
         
 if __name__ == "__main__":
     App()
