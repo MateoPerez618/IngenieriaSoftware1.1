@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime, timedelta
 from autenticacion import UsuarioDB, Usuario
-from Libro import LibroDB
+from Libro import LibroDB, Libro
 from disponibilidad import GestorDisponibilidad
 from Prestamo import PrestamoDB
 from PIL import Image, ImageTk
@@ -369,7 +369,7 @@ class App:
         # Título de la sección
         tk.Label(
             ventana, text="Catálogo de la Biblioteca",
-            bg=COLOR_FONDO, fg=COLOR_TEXTO,
+            bg=COLOR_FONDO, fg="white",
             font=("Helvetica", 16, "bold")
         ).pack(pady=10)
     
@@ -381,13 +381,13 @@ class App:
     
         # Campo de texto para buscar por nombre o autor del libro
         tk.Label(filtro_frame, text="Buscar (nombre o autor):",
-                 bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
+                 bg=COLOR_FONDO, fg="white").grid(row=0, column=0, padx=5)
         entrada_busqueda = tk.Entry(filtro_frame)
         entrada_busqueda.grid(row=0, column=1, padx=5)
     
         # Menú desplegable para filtrar por categoría
         tk.Label(filtro_frame, text="Filtrar por categoría:",
-                 bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=2, padx=5)
+                 bg=COLOR_FONDO, fg="white").grid(row=0, column=2, padx=5)
         
         # Obtiene todas las categorías únicas de los libros para llenar el menú
         categorias = ["Todas"] + list({libro.categoria for libro in LibroDB().obtener_todos()})
@@ -450,17 +450,41 @@ class App:
             if not filtrados:
                 tk.Label(
                     scrollable_frame, text="No se encontraron libros con ese filtro.",
-                    bg=COLOR_FONDO, fg=COLOR_TEXTO
+                    bg=COLOR_FONDO, fg="white"
                 ).pack(pady=10)
             else:
                 # Muestra los libros filtrados con su información
                 for libro in filtrados:
-                    texto = f"{libro.nombre} | Categoría: {libro.categoria} | Autor: {libro.autor} | Cantidad: {libro.cantidad}"
-                    tk.Label(
-                        scrollable_frame, text=texto,
-                        bg=COLOR_FONDO, fg=COLOR_TEXTO,
-                        anchor="w", justify="left", wraplength=560
-                    ).pack(anchor="w", padx=5, pady=3)
+                    frame_libro = tk.Frame(scrollable_frame, bg=COLOR_FONDO)
+                    frame_libro.pack(fill="x", pady=2)
+                
+                    info = f"{libro.nombre} | Categoría: {libro.categoria} | Autor: {libro.autor} | Cantidad: {libro.cantidad}"
+                    tk.Label(frame_libro, text=info, bg=COLOR_FONDO, fg="white", anchor="w", justify="left").pack(side="left", padx=5)
+                
+                    if self.usuario_actual.rol == "Administrativo":
+                        def eliminar_libro(nombre=libro.nombre):
+                            respuesta = messagebox.askyesno("Confirmar", f"¿Deseas eliminar '{nombre}' definitivamente?")
+                            if respuesta:
+                                db_libro = LibroDB()
+                                db_libro.cursor.execute("DELETE FROM libros WHERE nombre = ?", (nombre,))
+                                db_libro.conn.commit()
+                                actualizar_lista()
+                        def modificar_cantidad(delta, nombre_libro):
+                            db_libros = LibroDB()
+                            if delta == 1:
+                                db_libros.sumar_cantidad(nombre_libro)
+                            elif delta == -1:
+                                db_libros.restar_cantidad(nombre_libro)
+                            actualizar_lista()
+
+                        tk.Button(frame_libro, text="Eliminar libro", bg="red", fg="white", command=eliminar_libro).pack(side="right", padx=2)
+
+                        tk.Button(frame_libro, text="Restar cantidad (-1)", bg="orange", fg="white",
+                                command=lambda nombre=libro.nombre: modificar_cantidad(-1, nombre)).pack(side="right", padx=2)
+                        
+                        tk.Button(frame_libro, text="Sumar cantidad (+1)", bg="green", fg="white",
+                                command=lambda nombre=libro.nombre: modificar_cantidad(1, nombre)).pack(side="right", padx=2)
+
     
         # Botón para activar el filtrado
         tk.Button(
@@ -471,6 +495,62 @@ class App:
     
         # Muestra la lista completa por defecto al abrir la ventana
         actualizar_lista()
+
+        if self.usuario_actual.rol == "Administrativo":
+            def abrir_agregar_libro():
+                ventana_nuevo = tk.Toplevel(ventana)
+                ventana_nuevo.title("Agregar nuevo libro")
+                ventana_nuevo.geometry("400x400")
+                ventana_nuevo.configure(bg=COLOR_FONDO)
+        
+                tk.Label(ventana_nuevo, text="Nombre:", bg=COLOR_FONDO, fg="white").pack(pady=5)
+                entry_nombre = tk.Entry(ventana_nuevo)
+                entry_nombre.pack()
+        
+                tk.Label(ventana_nuevo, text="Autor:", bg=COLOR_FONDO, fg="white").pack(pady=5)
+                entry_autor = tk.Entry(ventana_nuevo)
+                entry_autor.pack()
+        
+                tk.Label(ventana_nuevo, text="Categoría:", bg=COLOR_FONDO, fg="white").pack(pady=5)
+                entry_categoria = tk.Entry(ventana_nuevo)
+                entry_categoria.pack()
+        
+                tk.Label(ventana_nuevo, text="Cantidad:", bg=COLOR_FONDO, fg="white").pack(pady=5)
+                entry_cantidad = tk.Entry(ventana_nuevo)
+                entry_cantidad.pack()
+        
+                def registrar_libro():
+                    nombre = entry_nombre.get().strip()
+                    autor = entry_autor.get().strip()
+                    categoria = entry_categoria.get().strip()
+                    try:
+                        cantidad = int(entry_cantidad.get().strip())
+                    except ValueError:
+                        messagebox.showerror("Error", "La cantidad debe ser un número.")
+                        return
+                
+                    if not nombre or not autor or not categoria or cantidad < 0:
+                        messagebox.showerror("Error", "Todos los campos son obligatorios y la cantidad no puede ser negativa.")
+                        return
+                
+                    db_libros = LibroDB()
+                    if db_libros.existe_libro(nombre):
+                        messagebox.showerror("Error", f"Ya existe un libro registrado con el nombre '{nombre}'.")
+                        return
+                
+                    nuevo_libro = Libro(nombre=nombre, autor=autor, categoria=categoria, cantidad=cantidad)
+                    if db_libros.registrar(nuevo_libro):
+                        messagebox.showinfo("Éxito", "Libro agregado correctamente.")
+                        ventana_nuevo.destroy()
+                        actualizar_lista()
+                    else:
+                        messagebox.showerror("Error", "Error al registrar el libro.")
+                
+                        
+                tk.Button(ventana_nuevo, text="Agregar libro", bg=COLOR_BOTON, fg=COLOR_TEXTO, command=registrar_libro).pack(pady=20)
+        
+            tk.Button(ventana, text="➕ Agregar nuevo libro", bg="blue", fg="white", command=abrir_agregar_libro).pack(pady=5)
+
 
 #Funcion de disponibilidad de horarios junto la reserva de los mismos
     def mostrar_disponibilidad(self):
@@ -484,7 +564,7 @@ class App:
         gestor = GestorDisponibilidad()
     
         # Título principal
-        tk.Label(ventana, text="Consultar disponibilidad", bg=COLOR_FONDO, fg=COLOR_TEXTO,
+        tk.Label(ventana, text="Consultar disponibilidad", bg=COLOR_FONDO, fg="white",
                  font=("Helvetica", 14, "bold")).pack(pady=10)
     
         # -------------------
@@ -494,12 +574,12 @@ class App:
         frame_opciones.pack(pady=5)
     
         # Campo para ingresar una fecha (opcional)
-        tk.Label(frame_opciones, text="Fecha (YYYY-MM-DD):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
+        tk.Label(frame_opciones, text="Fecha (YYYY-MM-DD):", bg=COLOR_FONDO, fg="white").grid(row=0, column=0, padx=5)
         entry_fecha = tk.Entry(frame_opciones)
         entry_fecha.grid(row=0, column=1)
     
         # Campo para ingresar una hora específica (opcional)
-        tk.Label(frame_opciones, text="Hora (7-14):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=1, column=0, padx=5)
+        tk.Label(frame_opciones, text="Hora (7-14):", bg=COLOR_FONDO, fg="white").grid(row=1, column=0, padx=5)
         entry_hora = tk.Entry(frame_opciones)
         entry_hora.grid(row=1, column=1)
     
@@ -558,7 +638,7 @@ class App:
             # Si no hay resultados disponibles con esos filtros
             if not resultados:
                 tk.Label(scrollable_frame, text="❌ No hay disponibilidad con esos filtros.",
-                         bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=10)
+                         bg=COLOR_FONDO, fg="white").pack(pady=10)
             else:
                 # Muestra cada entrada disponible junto con su botón de reserva
                 for entrada in resultados:
@@ -566,7 +646,7 @@ class App:
                     fila.pack(fill="x", padx=5, pady=3)
     
                     texto = f"{entrada.fecha} a las {entrada.hora}:00 — Disponible"
-                    tk.Label(fila, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO, anchor="w").pack(side="left", expand=True)
+                    tk.Label(fila, text=texto, bg=COLOR_FONDO, fg="white", anchor="w").pack(side="left", expand=True)
     
                     # Función interna para hacer una reserva de ese horario
                     def hacer_reserva(fecha=entrada.fecha, hora=entrada.hora):
@@ -602,7 +682,7 @@ class App:
     
         # Título de la ventana
         tk.Label(ventana, text="Funcionalidad: Prestar libro",
-                 bg=COLOR_FONDO, fg=COLOR_TEXTO, font=("Helvetica", 16, "bold")).pack(pady=10)
+                 bg=COLOR_FONDO, fg="white", font=("Helvetica", 16, "bold")).pack(pady=10)
     
         # Se crean instancias de las bases de datos de libros y préstamos
         db_libros = LibroDB()
@@ -615,12 +695,12 @@ class App:
         filtro_frame.pack(pady=(0, 10))
     
         # Entrada para buscar por nombre o autor
-        tk.Label(filtro_frame, text="Buscar (nombre o autor):", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
+        tk.Label(filtro_frame, text="Buscar (nombre o autor):", bg=COLOR_FONDO, fg="white").grid(row=0, column=0, padx=5)
         entrada_busqueda = tk.Entry(filtro_frame)
         entrada_busqueda.grid(row=0, column=1, padx=5)
     
         # Menú para filtrar por categoría
-        tk.Label(filtro_frame, text="Filtrar por categoría:", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=2, padx=5)
+        tk.Label(filtro_frame, text="Filtrar por categoría:", bg=COLOR_FONDO, fg="white").grid(row=0, column=2, padx=5)
         categorias = ["Todas"] + list({libro.categoria for libro in db_libros.obtener_todos()})
         categoria_var = tk.StringVar(value="Todas")
         categoria_menu = ttk.Combobox(filtro_frame, textvariable=categoria_var, values=categorias, state="readonly")
@@ -710,7 +790,7 @@ class App:
             # Muestra mensaje si no hay resultados
             if not filtrados:
                 tk.Label(scrollable_frame, text="❌ No se encontraron libros disponibles.",
-                         bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=10)
+                         bg=COLOR_FONDO, fg="white").pack(pady=10)
             else:
                 # Muestra cada libro disponible junto a su botón de préstamo
                 for libro in filtrados:
@@ -719,7 +799,7 @@ class App:
                     frame_libro.pack(fill="x", pady=5, padx=5)
     
                     # Etiqueta con información del libro
-                    tk.Label(frame_libro, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                    tk.Label(frame_libro, text=texto, bg=COLOR_FONDO, fg="white",
                              anchor="w", justify="left", wraplength=450).pack(side="left", fill="x", expand=True)
     
                     # Botón para realizar el préstamo
@@ -851,7 +931,7 @@ class App:
             ventana,
             text="📥 Gestión de préstamos",
             bg=COLOR_FONDO,
-            fg=COLOR_TEXTO,
+            fg="white",
             font=("Helvetica", 14, "bold")
         ).pack(pady=10)
     
@@ -859,11 +939,11 @@ class App:
         frame_filtros = tk.Frame(ventana, bg=COLOR_FONDO)
         frame_filtros.pack(pady=5)
     
-        tk.Label(frame_filtros, text="📚 Libro:", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=0, padx=5)
+        tk.Label(frame_filtros, text="📚 Libro:", bg=COLOR_FONDO, fg="white").grid(row=0, column=0, padx=5)
         entry_libro = tk.Entry(frame_filtros)
         entry_libro.grid(row=0, column=1, padx=5)
     
-        tk.Label(frame_filtros, text="👤 Usuario:", bg=COLOR_FONDO, fg=COLOR_TEXTO).grid(row=0, column=2, padx=5)
+        tk.Label(frame_filtros, text="👤 Usuario:", bg=COLOR_FONDO, fg="white").grid(row=0, column=2, padx=5)
         entry_usuario = tk.Entry(frame_filtros)
         entry_usuario.grid(row=0, column=3, padx=5)
     
@@ -912,7 +992,7 @@ class App:
             
             if not prestamos_filtrados:
                 tk.Label(scrollable_frame, text="No hay préstamos que coincidan con los filtros.",
-                         bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
+                         bg=COLOR_FONDO, fg="white").pack(pady=20)
                 return
             
             for id_prestamo, usuario, libro, fecha_prestamo, fecha_devolucion, estado_dev, estado_pres in prestamos_filtrados:
@@ -928,7 +1008,7 @@ class App:
                     f"Estado de devolución: {estado_dev.capitalize()}"
                 )
             
-                tk.Label(frame, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                tk.Label(frame, text=texto, bg=COLOR_FONDO, fg="white",
                          anchor="w", justify="left", padx=10, pady=5).pack(side="left", fill="both", expand=True)
             
                 botones = tk.Frame(frame, bg=COLOR_FONDO)
@@ -1006,7 +1086,7 @@ class App:
         ventana.geometry("600x400")
         ventana.configure(bg=COLOR_FONDO)
     
-        tk.Label(ventana, text="Usuarios pendientes de autenticación", bg=COLOR_FONDO, fg=COLOR_TEXTO,
+        tk.Label(ventana, text="Usuarios pendientes de autenticación", bg=COLOR_FONDO, fg="white",
                  font=("Helvetica", 14, "bold")).pack(pady=10)
     
         # Marco scrollable para la lista
@@ -1033,14 +1113,14 @@ class App:
     
             if not usuarios:
                 tk.Label(lista_frame, text="✅ No hay usuarios pendientes de autenticación.",
-                         bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
+                         bg=COLOR_FONDO, fg="white").pack(pady=20)
             else:
                 for u in usuarios:
                     fila = tk.Frame(lista_frame, bg=COLOR_FONDO)
                     fila.pack(fill="x", pady=5)
                 
                     texto = f"{u['nombre_completo']} | Curso: {u['curso']} | Rol: {u['rol']} | Correo: {u['correo']}"
-                    tk.Label(fila, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                    tk.Label(fila, text=texto, bg=COLOR_FONDO, fg="white",
                              anchor="w", justify="left", wraplength=350).pack(side="left", fill="x", expand=True)
                     
                     # Botón para eliminar el registro

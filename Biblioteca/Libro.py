@@ -39,6 +39,32 @@ class LibroDB:
         """, (nombre_libro,))
         self.conn.commit()
 
+    def sumar_cantidad(self, nombre_libro):
+        self.cursor.execute("""
+            UPDATE libros
+            SET cantidad = cantidad + 1
+            WHERE nombre = ?
+        """, (nombre_libro,))
+        self.conn.commit()
+
+    def existe_libro(self, nombre_libro):
+        self.cursor.execute("SELECT 1 FROM libros WHERE nombre = ?", (nombre_libro,))
+        return self.cursor.fetchone() is not None
+
+
+    def registrar(self, libro):
+        try:
+            self.cursor.execute("""
+                INSERT INTO libros (nombre, autor, categoria, cantidad)
+                VALUES (?, ?, ?, ?)
+            """, (libro.nombre, libro.autor, libro.categoria, libro.cantidad))
+            self.conn.commit()
+            return True
+        except Exception as e:
+            print("Error al registrar libro:", e)
+            return False
+    
+
    
 
 # Lista de libros a insertar
