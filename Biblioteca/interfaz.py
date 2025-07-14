@@ -5,10 +5,12 @@ from autenticacion import UsuarioDB, Usuario
 from Libro import LibroDB
 from disponibilidad import GestorDisponibilidad
 from Prestamo import PrestamoDB
+from PIL import Image, ImageTk
+import os
 
-COLOR_FONDO = "#003366"
-COLOR_BOTON = "#0055A5"
-COLOR_TEXTO = "white"
+COLOR_FONDO = "#2A683A"
+COLOR_BOTON = "#fcb900"
+COLOR_TEXTO = "black"
 
 # Clase principal de la aplicacion
 class App:
@@ -41,18 +43,25 @@ class App:
             widget.destroy()
 
     def mostrar_inicio(self):
-        # Limpia el marco antes de mostrar los nuevos elementos (por si venimos de otra pantalla)
         self.limpiar_marco()
-
-        # Muestra el título del sistema en la parte superior
+    
+        # Título
         tk.Label(self.marco, text="Colegio Nuestra Señora de la Providencia",
-                 bg=COLOR_FONDO, fg=COLOR_TEXTO, font=("Helvetica", 16, "bold")).pack(pady=(30, 40))
+                 bg=COLOR_FONDO, fg="white", font=("Helvetica", 16, "bold")).pack(pady=(30, 10))
 
-        # Botón para ir a la pantalla de inicio de sesión
+        ruta_absoluta = os.path.join(os.path.dirname(__file__), "Recursos", "logo.png")
+        imagen = Image.open(ruta_absoluta)
+        imagen = imagen.resize((200, 200), Image.Resampling.LANCZOS)  # Opcional: redimensionar
+        self.logo_img = ImageTk.PhotoImage(imagen)  # Guarda la referencia para evitar que se borre
+    
+        # Mostrar imagen
+        tk.Label(self.marco, image=self.logo_img, bg=COLOR_FONDO).pack(pady=(0, 30))
+    
+        # Botón de login
         tk.Button(self.marco, text="Iniciar sesión", width=20, bg=COLOR_BOTON, fg=COLOR_TEXTO,
                   font=("Helvetica", 12), command=self.mostrar_login).pack(pady=10)
-
-        # Botón para ir a la pantalla de registro de nuevos usuarios
+    
+        # Botón de registro
         tk.Button(self.marco, text="Registrarse", width=20, bg=COLOR_BOTON, fg=COLOR_TEXTO,
                   font=("Helvetica", 12), command=self.mostrar_registro_paso1).pack(pady=10)
         
@@ -80,9 +89,16 @@ class App:
             centro,
             text=f"Bienvenido, {self.usuario_actual.nombre_completo}",
             bg=COLOR_FONDO,
-            fg=COLOR_TEXTO,
+            fg="white",
             font=("Helvetica", 14, "bold")
         ).pack(pady=(0, 10))
+
+        ruta_absoluta = os.path.join(os.path.dirname(__file__), "Recursos", "logo.png")
+        imagen_original = Image.open(ruta_absoluta)
+        imagen_redimensionada = imagen_original.resize((200, 200))  # Ajusta tamaño si deseas
+        self.logo_imagen = ImageTk.PhotoImage(imagen_redimensionada)  # Guardar referencia
+
+        tk.Label(centro, image=self.logo_imagen, bg=COLOR_FONDO).pack(pady=(0, 20))
     
         # Botones comunes a todos los roles
         botones = [
@@ -136,19 +152,44 @@ class App:
         self.limpiar_marco()
     
         # Muestra el título "Iniciar sesión"
-        tk.Label(self.marco, text="Iniciar sesión", bg=COLOR_FONDO, fg=COLOR_TEXTO,
+        tk.Label(self.marco, text="Iniciar sesión", bg=COLOR_FONDO, fg="white",
                  font=("Helvetica", 14, "bold")).pack(pady=(20, 10))
+
+        ruta_absoluta = os.path.join(os.path.dirname(__file__), "Recursos", "logo.png")
+        imagen = Image.open(ruta_absoluta)
+        imagen = imagen.resize((200, 200), Image.Resampling.LANCZOS)  # Opcional: redimensionar
+        self.logo_img = ImageTk.PhotoImage(imagen)  # Guarda la referencia para evitar que se borre
+    
+        # Mostrar imagen
+        tk.Label(self.marco, image=self.logo_img, bg=COLOR_FONDO).pack(pady=(0, 30))
     
         # Etiqueta y campo de entrada para el nombre completo
-        tk.Label(self.marco, text="Nombre completo:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        entry_nombre = tk.Entry(self.marco)
+        tk.Label(self.marco, text="Nombre completo:", bg=COLOR_FONDO, fg="white").pack()
+        entry_nombre = tk.Entry(self.marco, fg="gray")
+        entry_nombre.insert(0, "Escribe tu nombre completo")
         entry_nombre.pack()
     
+        entry_nombre.bind("<FocusIn>", lambda e: self._borrar_placeholder(entry_nombre, "Escribe tu nombre completo"))
+        entry_nombre.bind("<FocusOut>", lambda e: self._restaurar_placeholder(entry_nombre, "Escribe tu nombre completo"))
+    
         # Etiqueta y campo de entrada para la contraseña
-        tk.Label(self.marco, text="Contraseña:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        entry_pass = tk.Entry(self.marco, show="*")
+        tk.Label(self.marco, text="Contraseña:", bg=COLOR_FONDO, fg="white").pack()
+        entry_pass = tk.Entry(self.marco, fg="gray")
+        entry_pass.insert(0, "Escribe tu contraseña")
         entry_pass.pack()
     
+        def ocultar_password(event):
+            if entry_pass.get() == "Escribe tu contraseña":
+                entry_pass.delete(0, "end")
+                entry_pass.config(fg="black", show="*")
+    
+        def mostrar_placeholder_password(event):
+            if entry_pass.get() == "":
+                entry_pass.insert(0, "Escribe tu contraseña")
+                entry_pass.config(fg="gray", show="")
+    
+        entry_pass.bind("<FocusIn>", ocultar_password)
+        entry_pass.bind("<FocusOut>", mostrar_placeholder_password)
         # Función interna que se ejecuta al presionar el botón "Ingresar"
         def intentar_login():
             nombre = entry_nombre.get().strip()
@@ -161,7 +202,7 @@ class App:
                     self.usuario_actual = usuario
                     self.mostrar_funcionalidades()
                 else:
-                    messagebox.showwarning("Acceso denegado", "Este usuario no está autenticado para ingresar.")
+                    messagebox.showwarning("Acceso denegado", "Este usuario aun no está autenticado para ingresar.")
             else:
                 messagebox.showerror("Error", "Credenciales inválidas.")
     
@@ -175,91 +216,128 @@ class App:
     
     #Funcionalidad de registro (primera parte, solo nombre y curso para validar que no exista)
     def mostrar_registro_paso1(self):
-        # Limpia el marco antes de mostrar los nuevos elementos
         self.limpiar_marco()
     
-        # Título de la primera etapa del registro
-        tk.Label(self.marco, text="Registro - Paso 1", bg=COLOR_FONDO, fg=COLOR_TEXTO,
+        tk.Label(self.marco, text="Registro - Paso 1", bg=COLOR_FONDO, fg="white",
                  font=("Helvetica", 14, "bold")).pack(pady=(20, 10))
+        
+        ruta_absoluta = os.path.join(os.path.dirname(__file__), "Recursos", "logo.png")
+        imagen = Image.open(ruta_absoluta)
+        imagen = imagen.resize((200, 200), Image.Resampling.LANCZOS)  # Opcional: redimensionar
+        self.logo_img = ImageTk.PhotoImage(imagen)  # Guarda la referencia para evitar que se borre
     
-        # Campo para ingresar el nombre completo
-        tk.Label(self.marco, text="Nombre completo:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        entry_nombre = tk.Entry(self.marco)
+        # Mostrar imagen
+        tk.Label(self.marco, image=self.logo_img, bg=COLOR_FONDO).pack(pady=(0, 30))
+    
+        # ----------------------------
+        # Entry: Nombre completo
+        # ----------------------------
+        tk.Label(self.marco, text="Nombre completo:", bg=COLOR_FONDO, fg="white").pack()
+        entry_nombre = tk.Entry(self.marco, fg="gray")
+        entry_nombre.insert(0, "Escribe tu nombre completo")
         entry_nombre.pack()
     
-        # Campo para ingresar el curso
-        tk.Label(self.marco, text="Curso:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        entry_curso = tk.Entry(self.marco)
+        entry_nombre.bind("<FocusIn>", lambda e: self._borrar_placeholder(entry_nombre, "Escribe tu nombre completo"))
+        entry_nombre.bind("<FocusOut>", lambda e: self._restaurar_placeholder(entry_nombre, "Escribe tu nombre completo"))
+    
+        # ----------------------------
+        # Entry: Curso
+        # ----------------------------
+        tk.Label(self.marco, text="Curso:", bg=COLOR_FONDO, fg="white").pack()
+        entry_curso = tk.Entry(self.marco, fg="gray")
+        entry_curso.insert(0, "Ej: 10A, 11B")
         entry_curso.pack()
     
-        # Función que valida los datos y pasa al segundo paso del registro
+        entry_curso.bind("<FocusIn>", lambda e: self._borrar_placeholder(entry_curso, "Ej: 10A, 11B"))
+        entry_curso.bind("<FocusOut>", lambda e: self._restaurar_placeholder(entry_curso, "Ej: 10A, 11B"))
+    
         def validar_y_continuar():
-            nombre = entry_nombre.get().strip()  # Elimina espacios
+            nombre = entry_nombre.get().strip()
             curso = entry_curso.get().strip()
     
-            # Verifica que no haya campos vacíos
-            if not nombre or not curso:
+            if nombre in ("", "Escribe tu nombre completo") or curso in ("", "Ej: 10A, 11B"):
                 messagebox.showerror("Error", "Todos los campos son obligatorios.")
                 return
     
-            # Verifica si ya existe un usuario con ese nombre y curso
             if self.db.existe_usuario_por_nombre_y_curso(nombre, curso):
                 messagebox.showerror("Error", "El usuario ya existe.")
                 return
     
-            # Si pasa todas las validaciones, continúa al paso 2 del registro
             self.mostrar_registro_paso2(nombre, curso)
     
-        # Botón para validar y avanzar al paso 2
         tk.Button(self.marco, text="Siguiente", bg=COLOR_BOTON, fg=COLOR_TEXTO,
                   command=validar_y_continuar).pack(pady=15)
     
-        # Botón para volver a la pantalla de inicio
         tk.Button(self.marco, text="Volver", command=self.mostrar_inicio).pack()
 
-    #Funcionalidad de registro despues de la validacion del paso 1
     def mostrar_registro_paso2(self, nombre, curso):
-        # Limpia el marco para mostrar el paso 2 del registro
         self.limpiar_marco()
     
-        # Título del paso 2
-        tk.Label(self.marco, text="Registro - Paso 2", bg=COLOR_FONDO, fg=COLOR_TEXTO,
+        tk.Label(self.marco, text="Registro - Paso 2", bg=COLOR_FONDO, fg="white",
                  font=("Helvetica", 14, "bold")).pack(pady=(20, 10))
+        
+        ruta_absoluta = os.path.join(os.path.dirname(__file__), "Recursos", "logo.png")
+        imagen = Image.open(ruta_absoluta)
+        imagen = imagen.resize((200, 200), Image.Resampling.LANCZOS)  # Opcional: redimensionar
+        self.logo_img = ImageTk.PhotoImage(imagen)  # Guarda la referencia para evitar que se borre
     
-        # Muestra los datos ya ingresados en el paso anterior (para verificación)
-        tk.Label(self.marco, text=f"Nombre: {nombre}", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        tk.Label(self.marco, text=f"Curso: {curso}", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
+        # Mostrar imagen
+        tk.Label(self.marco, image=self.logo_img, bg=COLOR_FONDO).pack(pady=(0, 30))
     
-        # Campo para ingresar correo electrónico
-        tk.Label(self.marco, text="Correo electrónico:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        entry_correo = tk.Entry(self.marco)
+        tk.Label(self.marco, text=f"Nombre: {nombre}", bg=COLOR_FONDO, fg="white").pack()
+        tk.Label(self.marco, text=f"Curso: {curso}", bg=COLOR_FONDO, fg="white").pack()
+    
+        # ----------------------------
+        # Entry: Correo electrónico
+        # ----------------------------
+        tk.Label(self.marco, text="Correo electrónico:", bg=COLOR_FONDO, fg="white").pack()
+        entry_correo = tk.Entry(self.marco, fg="gray")
+        entry_correo.insert(0, "ejemplo@correo.com")
         entry_correo.pack()
     
-        # Campo para ingresar contraseña
-        tk.Label(self.marco, text="Contraseña:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        entry_pass = tk.Entry(self.marco, show="*")
+        entry_correo.bind("<FocusIn>", lambda e: self._borrar_placeholder(entry_correo, "ejemplo@correo.com"))
+        entry_correo.bind("<FocusOut>", lambda e: self._restaurar_placeholder(entry_correo, "ejemplo@correo.com"))
+    
+        # ----------------------------
+        # Entry: Contraseña
+        # ----------------------------
+        tk.Label(self.marco, text="Contraseña:", bg=COLOR_FONDO, fg="white").pack()
+        entry_pass = tk.Entry(self.marco, fg="gray")
+        entry_pass.insert(0, "Escribe tu contraseña")
         entry_pass.pack()
     
-        # Campo para seleccionar rol desde un menú desplegable
-        tk.Label(self.marco, text="Rol:", bg=COLOR_FONDO, fg=COLOR_TEXTO).pack()
-        roles = ["Estudiante", "Docente", "Administrativo"]  # Opciones de rol
+        def ocultar_password(event):
+            if entry_pass.get() == "Escribe tu contraseña":
+                entry_pass.delete(0, "end")
+                entry_pass.config(fg="black", show="*")
+    
+        def mostrar_placeholder_password(event):
+            if entry_pass.get() == "":
+                entry_pass.insert(0, "Escribe tu contraseña")
+                entry_pass.config(fg="gray", show="")
+    
+        entry_pass.bind("<FocusIn>", ocultar_password)
+        entry_pass.bind("<FocusOut>", mostrar_placeholder_password)
+    
+        # ----------------------------
+        # ComboBox: Rol
+        # ----------------------------
+        tk.Label(self.marco, text="Rol:", bg=COLOR_FONDO, fg="white").pack()
+        roles = ["Estudiante", "Docente", "Administrativo"]
         rol_var = tk.StringVar()
         rol_menu = ttk.Combobox(self.marco, textvariable=rol_var, values=roles, state="readonly")
         rol_menu.pack()
-        rol_menu.current(0)  # Selecciona "Estudiante" por defecto
+        rol_menu.current(0)
     
-        # Función que crea el usuario y lo registra en la base de datos
         def registrar():
             correo = entry_correo.get().strip()
             password = entry_pass.get().strip()
             rol = rol_var.get()
     
-            # Validaciones
-            if not correo or not password:
+            if correo in ("", "ejemplo@correo.com") or password in ("", "Escribe tu contraseña"):
                 messagebox.showerror("Error", "Todos los campos son obligatorios.")
                 return
     
-            # Crea un objeto Usuario con los datos proporcionados (autenticado='no' por defecto)
             usuario = Usuario(
                 nombre_completo=nombre,
                 password=password,
@@ -271,19 +349,15 @@ class App:
                 autenticado="no"
             )
     
-            # Intenta registrar el usuario en la base de datos
             if self.db.registrar(usuario):
-                messagebox.showinfo("Éxito", "Usuario registrado correctamente.")
-                self.mostrar_inicio()  # Redirige al inicio después del registro exitoso
+                messagebox.showinfo("Éxito", "Usuario registrado correctamente. Está en espera de autenticación.")
+                self.mostrar_inicio()
     
-        # Botón para registrar al usuario
         tk.Button(self.marco, text="Registrar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
                   command=registrar).pack(pady=15)
     
-        # Botón para volver al paso 1 del registro
         tk.Button(self.marco, text="Volver", command=self.mostrar_registro_paso1).pack()
-    
-    
+
     #Funcionalidad de catalogo
     def mostrar_catalogo(self):
         # Crea una nueva ventana para mostrar el catálogo
@@ -660,31 +734,26 @@ class App:
         actualizar_lista()
 
     def visualizar_prestamos(self, marco_derecho):
-        # Limpia todo el contenido anterior del marco derecho
         for widget in marco_derecho.winfo_children():
             widget.destroy()
     
-        # Establece borde negro y color de fondo coherente
         marco_derecho.config(
             bg=COLOR_FONDO,
             highlightbackground="black",
             highlightthickness=2
         )
     
-        # Crea un contenedor interior que se adapta al tamaño completo
         contenedor = tk.Frame(marco_derecho, bg=COLOR_FONDO)
         contenedor.pack(fill="both", expand=True)
     
-        # Título superior que se adapta horizontalmente
         tk.Label(
             contenedor,
             text="📚 Préstamos actuales",
             bg=COLOR_FONDO,
-            fg=COLOR_TEXTO,
+            fg="white",
             font=("Helvetica", 14, "bold")
         ).pack(pady=(10, 5), fill="x")
     
-        # Frame con scroll que se adapta completamente
         frame_scroll = tk.Frame(contenedor, bg=COLOR_FONDO)
         frame_scroll.pack(fill="both", expand=True)
     
@@ -699,10 +768,9 @@ class App:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
     
-        # Cargar los préstamos del usuario actual (ahora también el estado)
         db_prestamos = PrestamoDB()
         db_prestamos.cursor.execute("""
-            SELECT id, libro, fecha_prestamo, fecha_devolucion, estado_devolucion
+            SELECT id, libro, fecha_prestamo, fecha_devolucion, estado_devolucion, estado_prestamo
             FROM prestamos
             WHERE usuario = ?
         """, (self.usuario_actual.nombre_completo,))
@@ -713,11 +781,11 @@ class App:
                 scrollable_frame,
                 text="No tienes préstamos activos.",
                 bg=COLOR_FONDO,
-                fg=COLOR_TEXTO
+                fg="white"
             ).pack(pady=20)
             return
     
-        for id_prestamo, libro, fecha_prestamo, fecha_devolucion, estado in prestamos:
+        for id_prestamo, libro, fecha_prestamo, fecha_devolucion, estado_dev, estado_pres in prestamos:
             frame_prestamo = tk.Frame(scrollable_frame, bg=COLOR_FONDO, relief="groove", borderwidth=1)
             frame_prestamo.pack(fill="x", expand=True, padx=5, pady=5)
     
@@ -725,39 +793,54 @@ class App:
                 f"Título: {libro}\n"
                 f"Fecha préstamo: {fecha_prestamo}\n"
                 f"Fecha devolución: {fecha_devolucion}\n"
-                f"Estado: {estado.capitalize()}"
+                f"Estado del préstamo: {estado_pres.capitalize()}\n"
+                f"Estado de devolución: {estado_dev.capitalize()}"
             )
     
             tk.Label(
                 frame_prestamo,
                 text=info,
                 bg=COLOR_FONDO,
-                fg=COLOR_TEXTO,
+                fg="white",
                 anchor="w",
                 justify="left",
                 padx=10,
                 pady=5
             ).pack(side="left", fill="both", expand=True)
     
-            # Si el estado es "pendiente", permite solicitar devolución
-            if estado == "pendiente":
+            # Botón para devolver (si estado de devolución es pendiente)
+            if estado_dev == "pendiente":
                 def solicitar_devolucion(id=id_prestamo):
                     db_prestamos.cursor.execute("""
                         UPDATE prestamos SET estado_devolucion = 'solicitada'
                         WHERE id = ?
                     """, (id,))
                     db_prestamos.conn.commit()
-                    self.visualizar_prestamos(marco_derecho)  # refrescar
+                    self.visualizar_prestamos(marco_derecho)
     
                 tk.Button(
                     frame_prestamo,
                     text="Devolver",
                     bg=COLOR_BOTON,
-                    fg=COLOR_TEXTO,
+                    fg="black",
                     command=solicitar_devolucion
                 ).pack(side="right", padx=10, pady=10)
     
-
+            # Botón para cancelar solicitud (si aún está en estado "solicitado")
+            if estado_pres == "solicitado":
+                def cancelar_solicitud(id=id_prestamo):
+                    db_prestamos.cursor.execute("DELETE FROM prestamos WHERE id = ?", (id,))
+                    db_prestamos.conn.commit()
+                    self.visualizar_prestamos(marco_derecho)
+    
+                tk.Button(
+                    frame_prestamo,
+                    text="Cancelar solicitud",
+                    bg="red",
+                    fg="white",
+                    command=cancelar_solicitud
+                ).pack(side="right", padx=10, pady=10)
+    
     def prestamos_administrativo(self):
         ventana = tk.Toplevel(self.ventana)
         ventana.title("Administrar préstamos")
@@ -809,67 +892,88 @@ class App:
             libro_filtro = entry_libro.get().strip().lower()
             usuario_filtro = entry_usuario.get().strip().lower()
     
-            # Traer todos los préstamos
+            # Traer todos los préstamos incluyendo estado_prestamo
             db_prestamos.cursor.execute("""
-                SELECT id, usuario, libro, fecha_prestamo, fecha_devolucion, estado_devolucion
+                SELECT id, usuario, libro, fecha_prestamo, fecha_devolucion, estado_devolucion, estado_prestamo
                 FROM prestamos
                 ORDER BY fecha_prestamo DESC
             """)
             prestamos = db_prestamos.cursor.fetchall()
-    
+            
             # Aplicar filtros
             prestamos_filtrados = []
             for prestamo in prestamos:
-                _, usuario, libro, _, _, _ = prestamo
+                _, usuario, libro, _, _, _, _ = prestamo
                 if libro_filtro and libro_filtro not in libro.lower():
                     continue
                 if usuario_filtro and usuario_filtro not in usuario.lower():
                     continue
                 prestamos_filtrados.append(prestamo)
-    
+            
             if not prestamos_filtrados:
                 tk.Label(scrollable_frame, text="No hay préstamos que coincidan con los filtros.",
                          bg=COLOR_FONDO, fg=COLOR_TEXTO).pack(pady=20)
                 return
-    
-            for id_prestamo, usuario, libro, fecha_prestamo, fecha_devolucion, estado in prestamos_filtrados:
+            
+            for id_prestamo, usuario, libro, fecha_prestamo, fecha_devolucion, estado_dev, estado_pres in prestamos_filtrados:
                 frame = tk.Frame(scrollable_frame, bg=COLOR_FONDO, relief="groove", borderwidth=1)
                 frame.pack(fill="x", padx=10, pady=5)
-    
+            
                 texto = (
                     f"Usuario: {usuario}\n"
                     f"Libro: {libro}\n"
                     f"Fecha préstamo: {fecha_prestamo}\n"
                     f"Fecha devolución: {fecha_devolucion}\n"
-                    f"Estado: {estado}"
+                    f"Estado del préstamo: {estado_pres.capitalize()}\n"
+                    f"Estado de devolución: {estado_dev.capitalize()}"
                 )
-    
+            
                 tk.Label(frame, text=texto, bg=COLOR_FONDO, fg=COLOR_TEXTO,
                          anchor="w", justify="left", padx=10, pady=5).pack(side="left", fill="both", expand=True)
-    
-                if estado == "solicitada":
-                    def aceptar(id=id_prestamo, libro_nombre=libro):
+            
+                botones = tk.Frame(frame, bg=COLOR_FONDO)
+                botones.pack(side="right", padx=5, pady=5)
+            
+                # Si es una solicitud de préstamo
+                if estado_pres == "solicitado":
+                    def aprobar_prestamo(id=id_prestamo):
+                        db_prestamos.cursor.execute("""
+                            UPDATE prestamos SET estado_prestamo = 'activo'
+                            WHERE id = ?
+                        """, (id,))
+                        db_prestamos.conn.commit()
+                        messagebox.showinfo("Aprobado", "Préstamo aprobado.")
+                        cargar_prestamos()
+            
+                    def rechazar_prestamo(id=id_prestamo):
                         db_prestamos.cursor.execute("DELETE FROM prestamos WHERE id = ?", (id,))
                         db_prestamos.conn.commit()
-    
+                        messagebox.showinfo("Rechazado", "Préstamo rechazado y eliminado.")
+                        cargar_prestamos()
+            
+                    tk.Button(botones, text="Aprobar préstamo", bg="#3A7CA5", fg="white", command=aprobar_prestamo).pack(pady=2)
+                    tk.Button(botones, text="Rechazar solicitud", bg="#FFA500", fg="black", command=rechazar_prestamo).pack(pady=2)
+            
+                # Si es una solicitud de devolución
+                if estado_dev == "solicitada":
+                    def aceptar_devolucion(id=id_prestamo, libro_nombre=libro):
+                        db_prestamos.cursor.execute("DELETE FROM prestamos WHERE id = ?", (id,))
+                        db_prestamos.conn.commit()
                         db_libros.cursor.execute("""
                             UPDATE libros SET cantidad = cantidad + 1
                             WHERE nombre = ?
                         """, (libro_nombre,))
                         db_libros.conn.commit()
-    
                         messagebox.showinfo("Éxito", f"Devolución de '{libro_nombre}' aceptada.")
                         cargar_prestamos()
-    
-                    def rechazar(id=id_prestamo, usuario_nombre=usuario):
+            
+                    def rechazar_devolucion(id=id_prestamo, usuario_nombre=usuario):
                         db_usuarios.cursor.execute("""
                             UPDATE usuarios SET sanciones = sanciones + 1
                             WHERE nombre_completo = ?
                         """, (usuario_nombre,))
                         db_usuarios.conn.commit()
-    
                         nueva_fecha = (datetime.now() + timedelta(days=15)).strftime("%Y-%m-%d")
-    
                         db_prestamos.cursor.execute("""
                             UPDATE prestamos
                             SET estado_devolucion = 'pendiente',
@@ -877,15 +981,12 @@ class App:
                             WHERE id = ?
                         """, (nueva_fecha, id))
                         db_prestamos.conn.commit()
-    
                         messagebox.showinfo("Rechazado", f"Devolución rechazada. Nueva fecha: {nueva_fecha}")
                         cargar_prestamos()
-    
-                    botones = tk.Frame(frame, bg=COLOR_FONDO)
-                    botones.pack(side="right", padx=5, pady=5)
-    
-                    tk.Button(botones, text="Aceptar ✅", bg="green", fg="white", command=aceptar).pack(pady=2)
-                    tk.Button(botones, text="Rechazar ❌", bg="red", fg="white", command=rechazar).pack(pady=2)
+            
+                    tk.Button(botones, text="Aceptar devolución ✅", bg="green", fg="white", command=aceptar_devolucion).pack(pady=2)
+                    tk.Button(botones, text="Rechazar devolución ❌", bg="red", fg="white", command=rechazar_devolucion).pack(pady=2)
+            
     
         # Botón para aplicar filtros
         tk.Button(
@@ -961,7 +1062,18 @@ class App:
                     tk.Button(fila, text="Aceptar registro", bg=COLOR_BOTON, fg=COLOR_TEXTO,
                               command=aceptar).pack(side="right", padx=5)
     
-        cargar_usuarios()     
+        cargar_usuarios() 
+
+    def _borrar_placeholder(self, entry, texto_placeholder):
+        if entry.get() == texto_placeholder:
+            entry.delete(0, "end")
+            entry.config(fg="black")
+
+    def _restaurar_placeholder(self, entry, texto_placeholder):
+        if entry.get() == "":
+            entry.insert(0, texto_placeholder)
+            entry.config(fg="gray")
+    
         
 if __name__ == "__main__":
     App()

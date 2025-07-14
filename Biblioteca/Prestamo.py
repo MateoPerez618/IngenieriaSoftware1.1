@@ -18,7 +18,8 @@ class PrestamoDB:
                 usuario TEXT NOT NULL,
                 libro TEXT NOT NULL,
                 fecha_prestamo TEXT NOT NULL,
-                fecha_devolucion TEXT NOT NULL
+                fecha_devolucion TEXT NOT NULL,
+                estado_devolucion TEXT DEFAULT 'pendiente'
             )
         """)
         self.conn.commit()
@@ -28,13 +29,15 @@ class PrestamoDB:
         fecha_prestamo = datetime.today()
         fecha_devolucion = fecha_prestamo + timedelta(days=7)
         self.cursor.execute("""
-            INSERT INTO prestamos (usuario, libro, fecha_prestamo, fecha_devolucion)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO prestamos (usuario, libro, fecha_prestamo, fecha_devolucion, estado_devolucion, estado_prestamo)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, (
             usuario.nombre_completo,
             libro.nombre,
             fecha_prestamo.strftime("%Y-%m-%d"),
-            fecha_devolucion.strftime("%Y-%m-%d")
+            fecha_devolucion.strftime("%Y-%m-%d"),
+            estado_devolucion := 'pendiente',
+            estado_prestamo := 'solicitado'
         ))
         self.conn.commit()
         return fecha_devolucion.strftime("%Y-%m-%d")
