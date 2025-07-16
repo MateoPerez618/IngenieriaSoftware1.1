@@ -16,6 +16,7 @@ COLOR_TEXTO = "black"
 # Clase principal de la aplicacion
 class App:
     def __init__(self):
+        self.libroDB = LibroDB()
         # Crea la ventana principal de la aplicación
         self.ventana = tk.Tk()
         self.ventana.title("Sistema de Usuarios")  # Título de la ventana
@@ -106,6 +107,7 @@ class App:
             ("Mostrar catálogo", self.mostrar_catalogo),
             ("Ver disponibilidad", self.mostrar_disponibilidad),
             ("Prestar libro", self.prestamo),
+            ("Calificar libros", self.interfazCalificacionLibros),
             ("Funcionalidad 4", lambda: None),
             ("Cerrar sesión", self.mostrar_inicio)
         ]
