@@ -106,7 +106,7 @@ class App:
             ("Mostrar catálogo", self.mostrar_catalogo),
             ("Ver disponibilidad", self.mostrar_disponibilidad),
             ("Prestar libro", self.prestamo),
-            ("Funcionalidad 4", lambda: None),
+            ("Calificar libros", self.interfaz_calificacion_libros),
             ("Cerrar sesión", self.mostrar_inicio)
         ]
 
