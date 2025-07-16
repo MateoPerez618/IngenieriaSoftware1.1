@@ -5,10 +5,11 @@ from datetime import datetime, timedelta
 
 # Clase que representa una entrada de disponibilidad con el usuario asociado (si existe)
 class Disponibilidad:
-    def __init__(self, fecha, hora, estado, usuario=None):
+    def __init__(self, id, fecha, hora, disponibilidad, usuario=None):
+        self.id = id
         self.fecha = fecha
         self.hora = hora
-        self.estado = estado  # 'si' o 'no'
+        self.disponibilidad = disponibilidad  # 'si' o 'no'
         self.usuario = usuario  # nombre completo del usuario que reservó (None si está disponible)
 
     def __str__(self):
@@ -36,41 +37,20 @@ class GestorDisponibilidad:
         """)
         self.conn.commit() 
 
-    def buscar_disponibilidad(self, fecha=None, hora=None):
-        consulta = "SELECT fecha, hora, disponibilidad, usuario FROM disponibilidad WHERE disponibilidad = 'si'"
-        condiciones = []
-        parametros = []
+    def buscar_disponibilidad(self, fecha=None, hora=None, mostrar_todo=False):
+        query = "SELECT * FROM disponibilidad WHERE 1=1"
+        params = []
     
         if fecha:
-            condiciones.append("fecha = ?")
-            parametros.append(fecha)
+            query += " AND fecha = ?"
+            params.append(fecha)
         if hora:
-            condiciones.append("hora = ?")
-            parametros.append(hora)
+            query += " AND hora = ?"
+            params.append(hora)
+        if not mostrar_todo:
+            query += " AND disponibilidad = 'si'"
     
-        if condiciones:
-            consulta += " AND " + " AND ".join(condiciones)
+        self.cursor.execute(query, params)
+        resultados = self.cursor.fetchall()
     
-        consulta += " ORDER BY fecha, hora"
-    
-        self.cursor.execute(consulta, tuple(parametros))
-        registros = self.cursor.fetchall()
-    
-        return [Disponibilidad(f, h, d, u) for f, h, d, u in registros]
-
-
-
-# Insertar una nueva disponibilidad
-#entrada = Disponibilidad("2025-06-18", 9, "si")
-#gestor.insertar_disponibilidad(entrada)
-
-# Buscar por hora
-# gestor.buscar_por_hora(9)
-
-# Buscar por fecha
-# gestor.buscar_por_fecha("2025-06-18")
-
-# Buscar por fecha y hora
-# gestor.buscar_por_fecha_y_hora("2025-06-18", 9)
-
-
+        return [Disponibilidad(*r) for r in resultados]

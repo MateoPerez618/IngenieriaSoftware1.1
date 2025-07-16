@@ -108,7 +108,6 @@ class App:
             ("Ver disponibilidad", self.mostrar_disponibilidad),
             ("Prestar libro", self.prestamo),
             ("Calificar libros", self.interfazCalificacionLibros),
-            ("Funcionalidad 4", lambda: None),
             ("Cerrar sesión", self.mostrar_inicio)
         ]
 
@@ -607,70 +606,58 @@ class App:
         # ----------------------------------
         # Función que muestra los resultados
         # ----------------------------------
-        def mostrar_resultados():
-            # Borra cualquier resultado anterior
+        def mostrar_resultados(solo_disponibles=False):
             for widget in scrollable_frame.winfo_children():
                 widget.destroy()
-    
-            # Toma los valores de los filtros
+        
             fecha = entry_fecha.get().strip()
             hora = entry_hora.get().strip()
-    
+        
             resultados = []
-    
-            # Lógica para aplicar filtros
-            if fecha and hora:
-                try:
-                    hora = int(hora)
-                    resultados = gestor.buscar_disponibilidad(fecha=fecha, hora=hora)
-                except ValueError:
-                    # Si la hora no es válida, muestra un error
-                    tk.Label(scrollable_frame, text="⚠️ Hora inválida", bg=COLOR_FONDO, fg="red").pack()
-            elif fecha:
-                resultados = gestor.buscar_disponibilidad(fecha=fecha)
-            elif hora:
-                try:
-                    hora = int(hora)
-                    resultados = gestor.buscar_disponibilidad(hora=hora)
-                except ValueError:
-                    tk.Label(scrollable_frame, text="⚠️ Hora inválida", bg=COLOR_FONDO, fg="red").pack()
-            else:
-                # Si no se aplica ningún filtro, muestra todo
-                resultados = gestor.buscar_disponibilidad()
-    
-            # Si no hay resultados disponibles con esos filtros
+        
+            try:
+                if fecha and hora:
+                    resultados = gestor.buscar_disponibilidad(fecha=fecha, hora=int(hora), mostrar_todo=not solo_disponibles)
+                elif fecha:
+                    resultados = gestor.buscar_disponibilidad(fecha=fecha, mostrar_todo=not solo_disponibles)
+                elif hora:
+                    resultados = gestor.buscar_disponibilidad(hora=int(hora), mostrar_todo=not solo_disponibles)
+                else:
+                    resultados = gestor.buscar_disponibilidad(mostrar_todo=not solo_disponibles)
+            except ValueError:
+                tk.Label(scrollable_frame, text="⚠️ Hora inválida", bg=COLOR_FONDO, fg="red").pack()
+                return
+        
             if not resultados:
-                tk.Label(scrollable_frame, text="❌ No hay disponibilidad con esos filtros.",
-                         bg=COLOR_FONDO, fg="white").pack(pady=10)
+                tk.Label(scrollable_frame, text="❌ No hay resultados.", bg=COLOR_FONDO, fg="white").pack(pady=10)
             else:
-                # Muestra cada entrada disponible junto con su botón de reserva
                 for entrada in resultados:
                     fila = tk.Frame(scrollable_frame, bg=COLOR_FONDO)
                     fila.pack(fill="x", padx=5, pady=3)
-    
-                    texto = f"{entrada.fecha} a las {entrada.hora}:00 — Disponible"
+        
+                    texto = f"{entrada.fecha} a las {entrada.hora}:00 — "
+                    texto += "Disponible" if entrada.disponibilidad == "si" else f"No disponible (Reservado por {entrada.usuario})"
                     tk.Label(fila, text=texto, bg=COLOR_FONDO, fg="white", anchor="w").pack(side="left", expand=True)
-    
-                    # Función interna para hacer una reserva de ese horario
-                    def hacer_reserva(fecha=entrada.fecha, hora=entrada.hora):
-                        # Cambia el estado a "no disponible" y asigna al usuario actual
-                        gestor.cursor.execute("""
-                            UPDATE disponibilidad
-                            SET disponibilidad = 'no', usuario = ?
-                            WHERE fecha = ? AND hora = ? AND disponibilidad = 'si'
-                        """, (self.usuario_actual.nombre_completo, fecha, hora))
-                        gestor.conn.commit()
-                        # Muestra mensaje de éxito y actualiza la lista
-                        messagebox.showinfo("Reserva exitosa", f"Reservaste {fecha} a las {hora}:00")
-                        mostrar_resultados()
-    
-                    # Botón que permite hacer la reserva
-                    tk.Button(fila, text="Reservar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
-                              command=hacer_reserva).pack(side="right", padx=5)
-    
+        
+                    if entrada.disponibilidad == "si":
+                        def hacer_reserva(fecha=entrada.fecha, hora=entrada.hora):
+                            gestor.cursor.execute("""
+                                UPDATE disponibilidad
+                                SET disponibilidad = 'no', usuario = ?
+                                WHERE fecha = ? AND hora = ? AND disponibilidad = 'si'
+                            """, (self.usuario_actual.nombre_completo, fecha, hora))
+                            gestor.conn.commit()
+                            messagebox.showinfo("Reserva exitosa", f"Reservaste {fecha} a las {hora}:00")
+                            mostrar_resultados(solo_disponibles)
+        
+                        tk.Button(fila, text="Reservar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
+                                  command=hacer_reserva).pack(side="right", padx=5)
+
         # Botón que permite aplicar los filtros ingresados
         tk.Button(ventana, text="🔍 Buscar", bg=COLOR_BOTON, fg=COLOR_TEXTO,
                   command=mostrar_resultados).pack(pady=5)
+        tk.Button(ventana, text="✅ Ver solo disponibles", bg="green", fg="white",
+          command=lambda: mostrar_resultados(True)).pack(side="left", padx=5, pady=5)
     
         # Muestra todos los resultados desde el inicio
         mostrar_resultados()
