@@ -5,6 +5,7 @@ from autenticacion import UsuarioDB, Usuario
 from Libro import LibroDB, Libro
 from disponibilidad import GestorDisponibilidad
 from Prestamo import PrestamoDB
+from Catalogo import Catalogo
 from PIL import Image, ImageTk
 import os
 
@@ -1142,7 +1143,123 @@ class App:
                     tk.Button(fila, text="Aceptar registro", bg=COLOR_BOTON, fg=COLOR_TEXTO,
                               command=aceptar).pack(side="right", padx=5)
     
-        cargar_usuarios() 
+        cargar_usuarios()
+    
+
+    def interfaz_calificacion_libros(self):
+        ventana = tk.Toplevel(self.ventana)
+        ventana.title("Calificar y Ver Reseñas")
+        ventana.configure(bg=COLOR_FONDO)
+        ventana.geometry("600x600")
+
+    # --- Título ---
+        tk.Label(
+            ventana, text="Calificar y Ver Reseñas de Libros",
+            bg=COLOR_FONDO, fg="white",
+            font=("Helvetica", 16, "bold")
+        ).pack(pady=10)
+
+    # --- Formulario ---
+        frame_formulario = tk.Frame(ventana, bg=COLOR_FONDO)
+        frame_formulario.pack(pady=10)
+
+    # 1. Selección del libro
+        tk.Label(frame_formulario, text="Seleccionar libro:",
+                bg=COLOR_FONDO, fg="white").grid(row=0, column=0, padx=5, pady=5, sticky="e")
+
+        libros_disponibles = [libro.nombre for libro in self.libros]
+        libro_var = tk.StringVar()
+        combo_libros = ttk.Combobox(frame_formulario, textvariable=libro_var, values=libros_disponibles, state="readonly", width=40)
+        combo_libros.grid(row=0, column=1, padx=5, pady=5)
+
+    # 2. Calificación
+        tk.Label(frame_formulario, text="Calificación (1 a 5):",
+             bg=COLOR_FONDO, fg="white").grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        calificacion_var = tk.IntVar(value=5)
+        spin_calificacion = tk.Spinbox(frame_formulario, from_=1, to=5, textvariable=calificacion_var, width=5)
+        spin_calificacion.grid(row=1, column=1, padx=5, pady=5, sticky="w")
+
+    # 3. Reseña
+        tk.Label(frame_formulario, text="Reseña (opcional):",
+             bg=COLOR_FONDO, fg="white").grid(row=2, column=0, padx=5, pady=5, sticky="ne")
+        texto_reseña = tk.Text(frame_formulario, width=40, height=4)
+        texto_reseña.grid(row=2, column=1, padx=5, pady=5)
+
+    
+        def calificar():
+            nombre = libro_var.get()
+            calif = calificacion_var.get()
+            resena = texto_reseña.get("1.0", tk.END).strip()
+
+            if not nombre:
+                messagebox.showwarning("Error", "Selecciona un libro.")
+                return
+            self.calificarLibro(nombre, calif, resena if resena else None)
+            messagebox.showinfo("Éxito", "✅ Calificación registrada con éxito.")
+
+    # Botón para calificar libro
+        tk.Button(ventana, text="Calificar libro", command=calificar).pack(pady=10)
+
+        def mostrar_ventana_reseñas(libro):
+            reseña_win = tk.Toplevel()
+            reseña_win.title(f"Reseñas de {libro.nombre}")
+            reseña_win.configure(bg=COLOR_FONDO)
+            reseña_win.geometry("500x400")
+
+            tk.Label(reseña_win, text=f"📖 Reseñas de '{libro.nombre}'",
+                bg=COLOR_FONDO, fg=COLOR_TEXTO,
+                font=("Helvetica", 14, "bold")).pack(pady=10)
+
+            frame = tk.Frame(reseña_win, bg=COLOR_FONDO)
+            frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+            canvas = tk.Canvas(frame, bg=COLOR_FONDO, highlightthickness=0)
+            scrollbar = tk.Scrollbar(frame, orient="vertical", command=canvas.yview)
+            scroll_frame = tk.Frame(canvas, bg=COLOR_FONDO)
+
+            scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+            canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+            canvas.configure(yscrollcommand=scrollbar.set)
+
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+
+            if libro.reseñas:
+                for idx, (calif, res) in enumerate(zip(libro.calificaciones, libro.reseñas), start=1):
+                    texto = f"{idx}. ⭐ {calif} - {res if res else '(Sin reseña)'}"
+                    tk.Label(scroll_frame, text=texto, bg=COLOR_FONDO, fg="white", anchor="w", justify="left", wraplength=400).pack(anchor="w", pady=3)
+            else:
+                tk.Label(scroll_frame, text="No hay reseñas aún.", bg=COLOR_FONDO, fg="white").pack(pady=10)
+
+    # Botón para ver reseñas
+        def ver_reseñas():
+            nombre = libro_var.get()
+            if not nombre:
+                messagebox.showwarning("Error", "Selecciona un libro.")
+                return
+            for libro in self.libros:
+                if libro.nombre.lower() == nombre.lower():  
+                    mostrar_ventana_reseñas(libro)
+                    return
+                messagebox.showwarning("Error", "Libro no encontrado.")
+
+        tk.Button(ventana, text="Ver reseñas del libro", command=ver_reseñas).pack(pady=5)
+
+    # Botón para mostrar promedio de todos los libros
+        def mostrar_promedios():
+            texto = ""
+            for libro in self.libros:
+                if libro.calificaciones:
+                    promedio = sum(libro.calificaciones) / len(libro.calificaciones)
+                    texto += f"📖 {libro.nombre}: {promedio:.2f} ⭐ ({len(libro.calificaciones)} opiniones)\n"
+                else:
+                    texto += f"📖 {libro.nombre}: Sin calificaciones\n"
+                    messagebox.showinfo("Calificaciones promedio", texto)
+
+        tk.Button(ventana, text="Mostrar calificaciones promedio", command=mostrar_promedios).pack(pady=5)
+
+
+       
 
     def _borrar_placeholder(self, entry, texto_placeholder):
         if entry.get() == texto_placeholder:
